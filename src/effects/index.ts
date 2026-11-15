@@ -1,7 +1,10 @@
 import type { Effect } from '../engine/types';
 import { trip } from './trip';
 import { lava } from './lava';
-import { moire } from './moire';
+import { skyTheme } from './sky';
+import { smoke } from './smoke';
+import { shootingStars } from './meteors';
+import { magnet } from './magnet';
 import { aurora } from './aurora';
 import { warp } from './warp';
 import { parallax } from './parallax';
@@ -33,14 +36,17 @@ import { customCursor } from './cursor';
  * effect id, which is how "Copy code" finds it) and add it here.
  */
 export const EFFECTS: Effect[] = [
+  skyTheme,
   trip,
+  smoke,
   lava,
-  moire,
   aurora,
+  shootingStars,
   warp,
   parallax,
   constellation,
   dotGrid,
+  magnet,
   watchingEyes,
   flashlight,
   ink,

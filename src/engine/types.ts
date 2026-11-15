@@ -1,9 +1,10 @@
 // The shared contract every effect follows. Add an effect by writing one file
 // that exports an `Effect` and listing it in src/effects/index.ts.
 
-export type Category = 'cursor' | 'followers' | 'drawing' | 'trippy' | 'background' | 'lighting' | 'physics' | 'click';
+export type Category = 'scene' | 'cursor' | 'followers' | 'drawing' | 'trippy' | 'background' | 'lighting' | 'physics' | 'click';
 
 export const CATEGORY_LABELS: Record<Category, string> = {
+  scene: 'Scene',
   cursor: 'Your cursor',
   followers: 'Followers',
   drawing: 'Drawing',
@@ -14,7 +15,7 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   click: 'Click',
 };
 
-export const CATEGORY_ORDER: Category[] = ['cursor', 'followers', 'drawing', 'trippy', 'background', 'lighting', 'physics', 'click'];
+export const CATEGORY_ORDER: Category[] = ['scene', 'cursor', 'followers', 'drawing', 'trippy', 'background', 'lighting', 'physics', 'click'];
 
 export interface RangeSetting {
   kind: 'range';
@@ -94,6 +95,8 @@ export interface Effect<S extends Values = Values> {
   blurb: string;
   category: Category;
   layer: 'back' | 'front';
+  /** Set to false when Copy code makes no sense for this effect. */
+  snippet?: false;
   /** Two or three controls. */
   settings: SettingDef[];
   setup(env: Env, s: S): void;

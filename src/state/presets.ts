@@ -91,11 +91,20 @@ export const PRESETS: Preset[] = [
     },
   },
   {
-    name: 'Op art',
+    name: 'Cosmic drift',
     setup: {
-      moire: { color: '#ffffff', spacing: 8, opacity: 30 },
-      cursor: { shape: 'ring', color: '#ff7ad9', size: 22 },
-      shockwave: { color: '#ff7ad9', size: 260, speed: 5 },
+      sky: { theme: 'nebula', stars: 7, glow: 6 },
+      smoke: { density: 4, swirl: 6, colors: 3 },
+      meteors: { color: '#fff3cf', amount: 5, length: 6 },
+      cursor: { shape: 'planet', color: '#ffd166', size: 26 },
+    },
+  },
+  {
+    name: 'Magnet lab',
+    setup: {
+      sky: { theme: 'void', stars: 3, glow: 0 },
+      magnet: { color: '#9ec5ff', spacing: 22, strength: 7 },
+      gravity: { color: '#ff7ad9', pull: 4, count: 120 },
     },
   },
 ];
@@ -126,7 +135,7 @@ export function randomSetup(effects: Effect[]): Setup {
   const used = new Set<string>();
   for (const fx of pool) {
     if (Object.keys(setup).length >= want) break;
-    const limited = ['drawing', 'background', 'lighting', 'trippy'].includes(fx.category);
+    const limited = ['drawing', 'background', 'lighting', 'trippy', 'scene'].includes(fx.category);
     if (limited && used.has(fx.category)) continue;
     used.add(fx.category);
     const values: Record<string, number | string> = {};
