@@ -4,14 +4,17 @@ import { skyStars, skyState } from './lib/skypaint';
 
 type S = { color: string; power: number; collapse: number };
 
-// Supernova. Once it is switched on, double-click or double-tap anywhere:
-// the real background stars come loose and fall toward that point, faster
-// and faster, streaking as they go, while everything else is pulled in too.
-// After a short hush it bursts. The stars are flung back out and settle into
-// their old places, and the blast shoves every other effect away.
+// Supernova. Once it is switched on, double-click or double-tap anywhere.
+//
+// Collapse: every star in a big circle around that point falls toward it,
+// including stars from beyond the edges of the screen, so the falling cloud
+// is round and keeps streaming in from off-screen. Near stars arrive first.
+// Burst: after a short hush, the swallowed stars are flung back out in an
+// expanding ring and fly off the screen, and the blast shoves every other
+// effect away. Then the normal sky fades gently back in.
 
 interface FallingStar {
-  hx: number; // home
+  hx: number; // where it started
   hy: number;
   x: number;
   y: number;
@@ -20,8 +23,20 @@ interface FallingStar {
   r: number;
   alpha: number;
   tint: string;
-  delay: number; // seconds before it starts falling
-  back: number; // seconds after the burst before it flies home
+  arrive: number; // seconds until it reaches the core
+  onScreen: boolean; // part of the painted sky (fades back in at the end)
+}
+
+interface Debris {
+  x: number;
+  y: number;
+  px: number;
+  py: number;
+  vx: number;
+  vy: number;
+  r: number;
+  alpha: number;
+  tint: string;
 }
 
 interface Spark {
@@ -36,8 +51,9 @@ interface Spark {
 }
 
 const HUSH = 0.2;
-const RETURN = 1.3;
 const SHELLS = 1.6;
+const FADE_IN_START = 0.9; // seconds after the burst
+const FADE_IN = 1.6;
 
 let running = false;
 let t = 0;
@@ -46,7 +62,9 @@ let cy = 0;
 let boomed = false;
 let pending: { x: number; y: number } | null = null;
 let lastTap = { at: 0, x: 0, y: 0 };
-let stars: FallingStar[] = [];
+let falling: FallingStar[] = [];
+let debris: Debris[] = [];
+let home: FallingStar[] = [];
 const sparks: Spark[] = [];
 let core: HTMLCanvasElement | null = null;
 
@@ -56,8 +74,44 @@ export function triggerSupernova(x: number, y: number): void {
 }
 
 const collapseTime = (s: S) => 0.7 + s.collapse * 0.15;
-const easeIn = (k: number) => k * k * k;
-const easeOut = (k: number) => 1 - Math.pow(1 - k, 3);
+const TINTS = ['255,255,255', '200,220,255', '255,230,210', '190,255,250'];
+
+/** The sky's stars, plus matching stars beyond the screen edges, inside a circle. */
+function gather(w: number, h: number, x: number, y: number, C: number): FallingStar[] {
+  const R = Math.max(Math.hypot(x, y), Math.hypot(w - x, y), Math.hypot(x, h - y), Math.hypot(w - x, h - y)) + 40;
+  const out: FallingStar[] = [];
+  const add = (sx: number, sy: number, r: number, alpha: number, tint: string, onScreen: boolean) => {
+    const d = Math.hypot(sx - x, sy - y);
+    if (d > R) return;
+    out.push({
+      hx: sx,
+      hy: sy,
+      x: sx,
+      y: sy,
+      px: sx,
+      py: sy,
+      r,
+      alpha,
+      tint,
+      // Arrival depends only on distance, so the cloud stays round.
+      arrive: C * (0.3 + 0.7 * Math.sqrt(d / R)) + Math.random() * 0.06,
+      onScreen,
+    });
+  };
+  for (const st of skyStars(w, h, skyState.stars)) add(st.x, st.y, st.r, st.alpha, st.tint, true);
+  // Same density off-screen, so stars keep streaming in from the edges.
+  const perArea = (skyState.stars / 6) / 2600;
+  const box = (2 * R) ** 2;
+  const tries = Math.round(box * perArea);
+  for (let i = 0; i < tries; i++) {
+    const sx = x - R + Math.random() * 2 * R;
+    const sy = y - R + Math.random() * 2 * R;
+    if (sx >= 0 && sx <= w && sy >= 0 && sy <= h) continue; // that area is the real sky
+    const bright = Math.random();
+    add(sx, sy, bright > 0.97 ? 1.4 : bright > 0.85 ? 1.0 : 0.6, 0.35 + bright * 0.6, TINTS[Math.floor(Math.random() * 4)], false);
+  }
+  return out;
+}
 
 export const supernova: Effect<S> = {
   id: 'supernova',
@@ -92,31 +146,16 @@ export const supernova: Effect<S> = {
   },
 
   update(dt, env, s) {
+    const C = collapseTime(s);
     if (pending && !running) {
       running = true;
       boomed = false;
       t = 0;
       cx = pending.x;
       cy = pending.y;
-      const far = Math.hypot(env.width, env.height);
-      const C = collapseTime(s);
-      stars = skyStars(env.width, env.height, skyState.stars).map((st) => {
-        const d = Math.hypot(st.x - cx, st.y - cy);
-        return {
-          hx: st.x,
-          hy: st.y,
-          x: st.x,
-          y: st.y,
-          px: st.x,
-          py: st.y,
-          r: st.r,
-          alpha: st.alpha,
-          tint: st.tint,
-          // Nearby stars let go first, the far ones a moment later.
-          delay: (d / far) * C * 0.45 + Math.random() * 0.1,
-          back: Math.random() * 0.25,
-        };
-      });
+      falling = gather(env.width, env.height, cx, cy, C);
+      home = falling.filter((f) => f.onScreen);
+      debris = [];
       skyState.hideStars(true);
       env.cue('collapse', cx);
     }
@@ -124,23 +163,17 @@ export const supernova: Effect<S> = {
     if (!running) return;
 
     t += dt;
-    const C = collapseTime(s);
     const big = Math.hypot(env.width, env.height);
     const burstAt = C + HUSH;
 
-    for (const st of stars) {
-      st.px = st.x;
-      st.py = st.y;
-      if (t < burstAt) {
-        const k = Math.min(1, Math.max(0, (t - st.delay) / (C - st.delay)));
-        const e = easeIn(k);
+    if (t < burstAt) {
+      for (const st of falling) {
+        st.px = st.x;
+        st.py = st.y;
+        const k = Math.min(1, t / st.arrive);
+        const e = k * k * k; // slow at first, then faster and faster
         st.x = st.hx + (cx - st.hx) * e;
         st.y = st.hy + (cy - st.hy) * e;
-      } else {
-        const k = Math.min(1, Math.max(0, (t - burstAt - st.back) / RETURN));
-        const e = easeOut(k);
-        st.x = cx + (st.hx - cx) * e;
-        st.y = cy + (st.hy - cy) * e;
       }
     }
 
@@ -151,6 +184,13 @@ export const supernova: Effect<S> = {
       if (!boomed) {
         boomed = true;
         env.cue('boom', cx, s.power / 6);
+        // Everything that fell in is flung back out, evenly in every direction.
+        debris = falling.map((st) => {
+          const a = Math.random() * Math.PI * 2;
+          const v = (350 + Math.random() * 900) * (0.6 + s.power * 0.07);
+          return { x: cx, y: cy, px: cx, py: cy, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: st.r, alpha: st.alpha, tint: st.tint };
+        });
+        falling = [];
         const n = env.budget.take(60 + s.power * 25);
         const hue = hexToHue(s.color);
         for (let i = 0; i < n; i++) {
@@ -163,6 +203,19 @@ export const supernova: Effect<S> = {
       if (p < 1) {
         env.blast({ x: cx, y: cy, radius: 80 + p * big, strength: 1500 * s.power * (1 - p), kind: 'push' });
         env.blast({ x: cx, y: cy, radius: 200 + p * big * 0.6, strength: 1 - p, kind: 'light' });
+      }
+    }
+
+    // Debris flies straight out and off the screen.
+    for (let i = debris.length - 1; i >= 0; i--) {
+      const d = debris[i];
+      d.px = d.x;
+      d.py = d.y;
+      d.x += d.vx * dt;
+      d.y += d.vy * dt;
+      if (d.x < -60 || d.x > env.width + 60 || d.y < -60 || d.y > env.height + 60) {
+        debris[i] = debris[debris.length - 1];
+        debris.pop();
       }
     }
 
@@ -184,10 +237,10 @@ export const supernova: Effect<S> = {
       sp.y += sp.vy * dt;
     }
 
-    // Done once every star is home and the sparks have burned out.
-    if (t > burstAt + RETURN + 0.3 && sparks.length === 0) {
+    // Done once the sky has faded back in and the sparks have burned out.
+    if (t > burstAt + FADE_IN_START + FADE_IN && sparks.length === 0 && debris.length === 0) {
       running = false;
-      stars = [];
+      home = [];
       skyState.hideStars(false);
     }
   },
@@ -196,26 +249,41 @@ export const supernova: Effect<S> = {
     if (!running) return;
     const C = collapseTime(s);
     const burstAt = C + HUSH;
-
-    // The moving stars live on the background layer, where the sky is.
     const back = env.back;
     back.lineCap = 'round';
-    for (const st of stars) {
-      const moved = Math.hypot(st.x - st.px, st.y - st.py);
-      const swallowed = t < burstAt && Math.hypot(st.x - cx, st.y - cy) < 6;
-      if (swallowed) continue;
+
+    const star = (x: number, y: number, px: number, py: number, r: number, alpha: number, tint: string) => {
+      const moved = Math.hypot(x - px, y - py);
       if (moved > 1.2) {
         // Fast stars stretch into streaks.
-        back.strokeStyle = `rgba(${st.tint},${Math.min(1, st.alpha + 0.2)})`;
-        back.lineWidth = st.r * 1.6;
+        back.strokeStyle = `rgba(${tint},${Math.min(1, alpha + 0.2)})`;
+        back.lineWidth = r * 1.6;
         back.beginPath();
-        back.moveTo(st.px - (st.x - st.px) * 1.5, st.py - (st.y - st.py) * 1.5);
-        back.lineTo(st.x, st.y);
+        back.moveTo(px - (x - px) * 1.5, py - (y - py) * 1.5);
+        back.lineTo(x, y);
         back.stroke();
       } else {
-        back.fillStyle = `rgba(${st.tint},${st.alpha})`;
+        back.fillStyle = `rgba(${tint},${alpha})`;
         back.beginPath();
-        back.arc(st.x, st.y, st.r, 0, Math.PI * 2);
+        back.arc(x, y, r, 0, Math.PI * 2);
+        back.fill();
+      }
+    };
+
+    for (const st of falling) {
+      if (st.x < -20 || st.x > env.width + 20 || st.y < -20 || st.y > env.height + 20) continue;
+      if (Math.hypot(st.x - cx, st.y - cy) < 6) continue; // swallowed
+      star(st.x, st.y, st.px, st.py, st.r, st.alpha, st.tint);
+    }
+    for (const d of debris) star(d.x, d.y, d.px, d.py, d.r, d.alpha, d.tint);
+
+    // The normal sky fades back in at the end.
+    const fade = Math.min(1, Math.max(0, (t - burstAt - FADE_IN_START) / FADE_IN));
+    if (fade > 0) {
+      for (const h of home) {
+        back.fillStyle = `rgba(${h.tint},${h.alpha * fade})`;
+        back.beginPath();
+        back.arc(h.hx, h.hy, h.r, 0, Math.PI * 2);
         back.fill();
       }
     }
@@ -268,7 +336,9 @@ export const supernova: Effect<S> = {
   teardown(env) {
     env.budget.give(sparks.length);
     sparks.length = 0;
-    stars = [];
+    falling = [];
+    debris = [];
+    home = [];
     running = false;
     skyState.hideStars(false);
     skyState.wantStarless = false;
