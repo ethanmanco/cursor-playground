@@ -8,6 +8,8 @@ import { startAutopilot } from './ui/autopilot';
 import { paintSky } from './ui/sky';
 import { savePicture } from './ui/snapshot';
 import { tiltSteer } from './ui/tiltsteer';
+import { createSound } from './ui/sound';
+import { aimSupernova, supernova } from './effects/supernova';
 import { recalibrate, requestTilt } from './engine/tilt';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -57,6 +59,58 @@ const pilotPref = {
 };
 let pilotOn = pilotPref.get();
 
+// Optional sound, off unless this browser turned it on before. Browsers only
+// allow audio after a click or key press, so a saved "on" waits for one.
+const SOUND_KEY = 'cursor-playground:sound';
+const sound = createSound();
+engine.onCue = (name, x, strength) => sound.play(name, x, strength, engine.env.timeScale);
+if (import.meta.env.DEV) Object.assign(window, { __sound: sound });
+let soundWanted = false;
+try {
+  soundWanted = localStorage.getItem(SOUND_KEY) === '1';
+} catch {
+  // Storage blocked: sound starts off.
+}
+if (soundWanted) {
+  const wake = () => {
+    sound.setOn(true);
+    removeEventListener('pointerdown', wake, true);
+    removeEventListener('keydown', wake, true);
+  };
+  addEventListener('pointerdown', wake, true);
+  addEventListener('keydown', wake, true);
+}
+const soundPref = {
+  get: () => soundWanted,
+  set(on: boolean) {
+    soundWanted = on;
+    sound.setOn(on);
+    try {
+      localStorage.setItem(SOUND_KEY, on ? '1' : '0');
+    } catch {
+      // Fine: it still works for this visit.
+    }
+  },
+};
+
+// Supernova: double-click or double-tap anywhere (or press N).
+function boom(x: number, y: number) {
+  if (engine.isOn('supernova')) return;
+  aimSupernova(x, y);
+  engine.enable(supernova, {});
+}
+let lastTap = { t: 0, x: 0, y: 0 };
+$('stage').addEventListener('pointerdown', (e) => {
+  if (!e.isTrusted) return;
+  const now = performance.now();
+  if (now - lastTap.t < 320 && Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < 40) {
+    boom(e.clientX, e.clientY);
+    lastTap = { t: 0, x: 0, y: 0 };
+  } else {
+    lastTap = { t: now, x: e.clientX, y: e.clientY };
+  }
+});
+
 // Tilt to steer is offered on touch devices that report motion.
 const canTilt = 'DeviceOrientationEvent' in window && matchMedia('(pointer: coarse)').matches;
 const steer = canTilt ? tiltSteer($('stage'), engine.env.tilt) : null;
@@ -82,6 +136,12 @@ const panel = buildPanel({
         return true;
       }
     : undefined,
+  setTimeScale: (scale) => engine.setTimeScale(scale),
+  sound: soundPref,
+  supernova() {
+    const p = engine.env.pointer;
+    boom(p.inside ? p.x : innerWidth / 2, p.inside ? p.y : innerHeight / 2);
+  },
   onTour(on) {
     touring = on;
     if (on) pilot.kick();

@@ -18,6 +18,12 @@ export interface PanelOptions {
   onTour(on: boolean): void;
   /** Tilt to steer, offered on phones and tablets only. Resolves false if motion access was refused. */
   tilt?: (on: boolean) => Promise<boolean>;
+  /** Set the speed of time: 1 normal, 0.2 slow motion, 0 frozen. */
+  setTimeScale(scale: number): void;
+  /** Optional sound effects. */
+  sound: { get(): boolean; set(on: boolean): void };
+  /** Set off a supernova at the cursor (or the middle of the screen). */
+  supernova(): void;
 }
 
 export interface Panel {
@@ -172,6 +178,54 @@ export function buildPanel(opts: PanelOptions): Panel {
     );
   }
 
+  // Time controls: slow motion and freeze. Holding Space also slows time.
+  const slowBtn = el('button', { type: 'button', class: 'action', 'aria-pressed': 'false' }, 'Slow motion');
+  const freezeBtn = el('button', { type: 'button', class: 'action', 'aria-pressed': 'false' }, 'Freeze');
+  const timePill = el('p', { class: 'time-pill', 'aria-hidden': 'true' });
+  document.body.append(timePill);
+  let slowOn = false;
+  let slowHeld = false;
+  let frozen = false;
+  const syncTime = () => {
+    const slow = slowOn || slowHeld;
+    opts.setTimeScale(frozen ? 0 : slow ? 0.2 : 1);
+    slowBtn.setAttribute('aria-pressed', String(slowOn));
+    freezeBtn.setAttribute('aria-pressed', String(frozen));
+    timePill.textContent = frozen ? 'Frozen. Press F to unfreeze.' : slow ? 'Slow motion' : '';
+    timePill.classList.toggle('on', frozen || slow);
+  };
+  slowBtn.addEventListener('click', () => {
+    slowOn = !slowOn;
+    syncTime();
+    announce(slowOn ? 'Slow motion on' : 'Slow motion off');
+  });
+  freezeBtn.addEventListener('click', () => {
+    frozen = !frozen;
+    syncTime();
+    announce(frozen ? 'Frozen' : 'Unfrozen');
+  });
+
+  // Optional sound.
+  const soundSwitch = el('input', { type: 'checkbox', role: 'switch', id: 'sound', class: 'switch' });
+  soundSwitch.checked = opts.sound.get();
+  soundSwitch.addEventListener('change', () => opts.sound.set(soundSwitch.checked));
+  const soundRow = el(
+    'div',
+    { class: 'option-row' },
+    el(
+      'label',
+      { for: 'sound', class: 'fx-label' },
+      el('span', { class: 'fx-name' }, 'Sound'),
+      el('span', { class: 'fx-blurb' }, 'Soft sounds for fireworks, pops, wishes, and supernovas.'),
+    ),
+    soundSwitch,
+  );
+  const toggleSound = () => {
+    soundSwitch.checked = !soundSwitch.checked;
+    opts.sound.set(soundSwitch.checked);
+    announce(soundSwitch.checked ? 'Sound on' : 'Sound off');
+  };
+
   const allOff = el('button', { type: 'button', class: 'action' }, 'Turn all off');
   allOff.addEventListener('click', () => {
     app.apply({});
@@ -243,6 +297,10 @@ export function buildPanel(opts: PanelOptions): Panel {
     ['R', 'Randomize'],
     ['1 to 9', 'Presets 1 to 9'],
     ['T', 'Start or stop the tour'],
+    ['Space (hold)', 'Slow motion'],
+    ['F', 'Freeze or unfreeze'],
+    ['N', 'Supernova'],
+    ['M', 'Sound on or off'],
     ['H', 'Hide or show the panel'],
     ['S', 'Save picture'],
     ['L', 'Copy share link'],
@@ -264,6 +322,19 @@ export function buildPanel(opts: PanelOptions): Panel {
   const keysButton = el('button', { type: 'button', class: 'link-button' }, 'Keyboard shortcuts');
   keysButton.addEventListener('click', showShortcuts);
 
+  addEventListener('keyup', (e) => {
+    if (e.key === ' ' && slowHeld) {
+      slowHeld = false;
+      syncTime();
+    }
+  });
+  addEventListener('blur', () => {
+    if (slowHeld) {
+      slowHeld = false;
+      syncTime();
+    }
+  });
+
   addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && document.body.classList.contains('zen')) {
       setZen(false);
@@ -279,6 +350,17 @@ export function buildPanel(opts: PanelOptions): Panel {
     else if (k === 's') save.click();
     else if (k === 'l') share.click();
     else if (k === 't') setTour(!touring);
+    else if (k === 'f') freezeBtn.click();
+    else if (k === 'n') opts.supernova();
+    else if (k === 'm') toggleSound();
+    else if (e.key === ' ') {
+      // Space presses focused buttons and switches, so only use it elsewhere.
+      if (t && (t.tagName === 'BUTTON' || t.tagName === 'INPUT' || t.tagName === 'SELECT')) return;
+      if (!slowHeld) {
+        slowHeld = true;
+        syncTime();
+      }
+    }
     else if (e.key === '?') showShortcuts();
     else if (/^[1-9]$/.test(e.key) && PRESETS[Number(e.key) - 1]) {
       const preset = PRESETS[Number(e.key) - 1];
@@ -361,6 +443,9 @@ export function buildPanel(opts: PanelOptions): Panel {
       el('div', { class: 'actions' }, share, save),
       el('div', { class: 'actions' }, allOff, hide),
       el('div', { class: 'actions' }, tour),
+      el('div', { class: 'actions' }, slowBtn, freezeBtn),
+      el('p', { class: 'hint' }, 'Double-click (or double-tap) anywhere for a supernova.'),
+      soundRow,
       pilotRow,
       ...(tiltRow ? [tiltRow] : []),
     ),

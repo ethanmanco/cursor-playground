@@ -695,6 +695,41 @@ body.zen .zen-exit {
   opacity: 1;
 }
 
+/* Slow motion / frozen indicator and small hints */
+
+.time-pill {
+  position: fixed;
+  left: 16px;
+  top: 16px;
+  z-index: 6;
+  margin: 0;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(14, 16, 38, 0.85);
+  border: 1px solid rgba(110, 231, 255, 0.45);
+  color: #bff6ff;
+  font-size: 0.85rem;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+
+.time-pill.on {
+  opacity: 1;
+}
+
+.action[aria-pressed='true'] {
+  background: rgba(110, 231, 255, 0.18);
+  border-color: rgba(110, 231, 255, 0.6);
+  color: #dffaff;
+}
+
+.hint {
+  margin: 10px 2px 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
 /* Tilt to steer marble */
 
 .tilt-marble {
