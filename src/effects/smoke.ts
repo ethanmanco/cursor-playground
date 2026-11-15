@@ -3,9 +3,11 @@ import { createShaderPass, NOISE_GLSL, type ShaderPass } from './lib/gl';
 
 type S = { density: number; swirl: number; colors: number };
 
-// Cosmic smoke: slow, colorful clouds of nebula gas drawn by a WebGL shader.
-// Noise is folded into itself a few times (domain warping), which makes the
-// wispy, marbled shapes. The gas swirls gently around your cursor.
+// Cosmic dust: faint, glowing gas and fine dust drifting among the stars,
+// drawn by a WebGL shader. Real nebulae glow, so the gas is added as light
+// on top of the sky instead of being painted over it: stars still shine
+// through. Thin bright filaments run through the gas, tiny dust grains glint,
+// and it all swirls gently around your cursor.
 
 const FRAG = `
 precision highp float;
@@ -17,38 +19,48 @@ uniform float uDensity;
 uniform float uHue;
 ${NOISE_GLSL}
 
-// A looping nebula palette: deep blue, magenta, cyan, and back.
-vec3 palette(float t) {
-  vec3 blue = vec3(0.2, 0.25, 0.85);
-  vec3 magenta = vec3(0.9, 0.28, 0.78);
-  vec3 cyan = vec3(0.3, 0.85, 0.95);
+vec3 gasColor(float t, float q) {
+  vec3 teal = vec3(0.18, 0.55, 0.75);
+  vec3 violet = vec3(0.5, 0.3, 0.85);
+  vec3 rose = vec3(0.85, 0.35, 0.6);
+  // A seamless loop: teal, violet, rose, and back to teal.
   float k = fract(t) * 3.0;
-  if (k < 1.0) return mix(blue, magenta, smoothstep(0.0, 1.0, k));
-  if (k < 2.0) return mix(magenta, cyan, smoothstep(0.0, 1.0, k - 1.0));
-  return mix(cyan, blue, smoothstep(0.0, 1.0, k - 2.0));
+  vec3 c = k < 1.0 ? mix(teal, violet, smoothstep(0.0, 1.0, k))
+         : k < 2.0 ? mix(violet, rose, smoothstep(0.0, 1.0, k - 1.0))
+                   : mix(rose, teal, smoothstep(0.0, 1.0, k - 2.0));
+  return mix(c, vec3(0.95, 0.75, 0.6), q * 0.25);
 }
 
 void main() {
   vec2 p = (gl_FragCoord.xy - 0.5 * uRes) / uRes.y;
   vec2 m = (uMouse - 0.5) * vec2(uRes.x / uRes.y, 1.0);
 
-  // Swirl the gas around the cursor, strongest close to it.
+  // A gentle swirl around the cursor.
   vec2 d = p - m;
-  float r = length(d);
-  float a = uSwirl * exp(-r * 3.0);
+  float a = uSwirl * exp(-length(d) * 3.5);
   p = m + mat2(cos(a), -sin(a), sin(a), cos(a)) * d;
 
   float t = uTime;
-  vec2 q = vec2(fbm(p * 1.4 + t * 0.05), fbm(p * 1.4 + vec2(5.2, 1.3) - t * 0.04));
-  vec2 w = vec2(fbm(p * 1.4 + 3.5 * q + vec2(1.7, 9.2) + t * 0.06),
-                fbm(p * 1.4 + 3.5 * q + vec2(8.3, 2.8) - t * 0.05));
-  float f = fbm(p * 1.4 + 3.5 * w);
+  vec2 q = vec2(fbm(p * 1.6 + t * 0.03), fbm(p * 1.6 + vec2(5.2, 1.3) - t * 0.025));
+  float f = fbm(p * 1.8 + 2.8 * q + vec2(t * 0.02, 0.0));
 
-  vec3 col = palette(f * 1.3 + length(q) * 0.7 + uHue);
-  col = mix(col, vec3(1.0), smoothstep(0.75, 1.0, f) * 0.35);
-  float alpha = smoothstep(0.35, 0.9, f) * uDensity;
-  col += (hash(gl_FragCoord.xy + t) - 0.5) / 255.0;
-  gl_FragColor = vec4(clamp(col, 0.0, 1.0) * alpha, alpha);
+  // Broad glow, plus thin bright filaments where the noise folds over.
+  float glow = smoothstep(0.45, 0.95, f);
+  float ridge = 1.0 - abs(fbm(p * 3.2 + 1.5 * q - t * 0.015) * 2.0 - 1.0);
+  float filaments = pow(ridge, 6.0) * smoothstep(0.35, 0.7, f);
+
+  vec3 col = gasColor(f * 0.9 + length(q) * 0.5 + uHue, q.x);
+  vec3 light = col * (glow * 0.55 + filaments * 0.9);
+
+  // Tiny dust grains that glint softly inside the gas.
+  vec2 cell = floor(gl_FragCoord.xy / 2.0);
+  float grain = step(0.996, hash(cell)) * (0.5 + 0.5 * sin(t * 3.0 + hash(cell + 7.0) * 40.0));
+  light += vec3(0.9, 0.9, 1.0) * grain * glow * 0.8;
+
+  light *= uDensity;
+  light += (hash(gl_FragCoord.xy + t) - 0.5) / 255.0;
+  light = clamp(light, 0.0, 1.0);
+  gl_FragColor = vec4(light, max(light.r, max(light.g, light.b)));
 }
 `;
 
@@ -59,13 +71,13 @@ let my = 0.5;
 
 export const smoke: Effect<S> = {
   id: 'smoke',
-  name: 'Cosmic smoke',
-  blurb: 'Colorful nebula gas drifts slowly and swirls around your cursor.',
+  name: 'Cosmic dust',
+  blurb: 'Faint glowing gas and dust drift among the stars and swirl around you.',
   category: 'trippy',
   layer: 'back',
   settings: [
-    { kind: 'range', key: 'density', label: 'Density', min: 1, max: 10, step: 1, default: 4 },
-    { kind: 'range', key: 'swirl', label: 'Swirl', min: 0, max: 10, step: 1, default: 5 },
+    { kind: 'range', key: 'density', label: 'Brightness', min: 1, max: 10, step: 1, default: 5 },
+    { kind: 'range', key: 'swirl', label: 'Swirl', min: 0, max: 10, step: 1, default: 4 },
     { kind: 'range', key: 'colors', label: 'Color drift', min: 0, max: 10, step: 1, default: 3 },
   ],
 
@@ -85,18 +97,19 @@ export const smoke: Effect<S> = {
 
   draw(env, s) {
     if (!pass) return; // Needs WebGL; without it the effect simply shows nothing.
-    // The gas is soft, so a bit under full size (smoothly stretched up)
-    // looks the same and saves work. Phones go lower.
-    const scale = matchMedia('(pointer: coarse)').matches ? 0.4 : 0.75;
+    // Rendered a bit under full size and stretched up smoothly: the gas is
+    // soft, and dust grains are drawn in 2-pixel cells anyway.
+    const scale = matchMedia('(pointer: coarse)').matches ? 0.5 : 0.8;
     pass.render(env.width * scale, env.height * scale, (gl) => {
       gl.uniform2f(pass!.uniform('uRes'), pass!.canvas.width, pass!.canvas.height);
       gl.uniform1f(pass!.uniform('uTime'), env.time * 0.6);
       gl.uniform2f(pass!.uniform('uMouse'), mx, my);
-      gl.uniform1f(pass!.uniform('uSwirl'), s.swirl * 0.35);
-      gl.uniform1f(pass!.uniform('uDensity'), 0.15 + s.density * 0.065);
-      gl.uniform1f(pass!.uniform('uHue'), env.time * s.colors * 0.01);
+      gl.uniform1f(pass!.uniform('uSwirl'), s.swirl * 0.3);
+      gl.uniform1f(pass!.uniform('uDensity'), 0.25 + s.density * 0.11);
+      gl.uniform1f(pass!.uniform('uHue'), env.time * s.colors * 0.008);
     });
     const ctx = env.back;
+    ctx.globalCompositeOperation = 'lighter';
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(pass.canvas, 0, 0, env.width, env.height);
