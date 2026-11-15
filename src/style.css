@@ -619,6 +619,81 @@ input[type='range']::-moz-range-thumb {
   background: var(--card);
 }
 
+/* My mixes */
+
+.mixes {
+  margin-top: 14px;
+}
+
+.mix-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mix {
+  display: inline-flex;
+  align-items: center;
+}
+
+.mix .chip {
+  border-radius: 999px 0 0 999px;
+}
+
+.mix-remove {
+  padding: 7px 10px;
+  border: 1px solid var(--glass-edge);
+  border-left: 0;
+  border-radius: 0 999px 999px 0;
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.mix-remove:hover {
+  background: rgba(255, 107, 107, 0.2);
+}
+
+.mix-empty {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+/* Zen mode */
+
+body.zen .panel {
+  display: none;
+}
+
+.zen-exit {
+  display: none;
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 12;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-edge);
+  background: rgba(14, 16, 38, 0.8);
+  font-size: 0.85rem;
+  cursor: pointer;
+  opacity: 0.4;
+  transition: opacity 0.2s;
+}
+
+body.zen .zen-exit {
+  display: block;
+}
+
+.zen-exit:hover,
+.zen-exit:focus-visible {
+  opacity: 1;
+}
+
 /* Autopilot ghost cursor and its hint */
 
 .ghost-cursor {

@@ -1,7 +1,7 @@
 import { CATEGORY_LABELS, CATEGORY_ORDER, type Effect, type SettingDef } from '../engine/types';
 import type { App } from '../state/app';
 import { PRESETS, randomSetup } from '../state/presets';
-import type { Setup } from '../state/setup';
+import { decodeSetup, encodeSetup, type Setup } from '../state/setup';
 import { copyText, showManualCopy, snippetFor } from './copy';
 
 export interface PanelOptions {
@@ -150,6 +150,87 @@ export function buildPanel(opts: PanelOptions): Panel {
     announce('All effects off');
   });
 
+  // Zen mode hides the panel for a clean view. Escape or the small
+  // "Show panel" button brings it back.
+  const hide = el('button', { type: 'button', class: 'action' }, 'Hide panel');
+  const zenExit = el('button', { type: 'button', class: 'zen-exit', 'data-cp-keep-cursor': '' }, 'Show panel');
+  document.body.append(zenExit);
+  const setZen = (on: boolean) => {
+    document.body.classList.toggle('zen', on);
+    if (on) zenExit.focus();
+    else hide.focus();
+    announce(on ? 'Panel hidden. Press Escape to show it again.' : 'Panel shown');
+  };
+  hide.addEventListener('click', () => setZen(true));
+  zenExit.addEventListener('click', () => setZen(false));
+  addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.body.classList.contains('zen')) setZen(false);
+  });
+
+  // My mixes: setups saved in this browser only.
+  const MIX_KEY = 'cursor-playground:mixes';
+  type Mix = { name: string; code: string };
+  const loadMixes = (): Mix[] => {
+    try {
+      const v: unknown = JSON.parse(localStorage.getItem(MIX_KEY) ?? '[]');
+      return Array.isArray(v)
+        ? v.filter((m): m is Mix => !!m && typeof m.name === 'string' && typeof m.code === 'string').slice(0, 12)
+        : [];
+    } catch {
+      return [];
+    }
+  };
+  const storeMixes = (mixes: Mix[]) => {
+    try {
+      localStorage.setItem(MIX_KEY, JSON.stringify(mixes));
+      return true;
+    } catch {
+      return false;
+    }
+  };
+  const mixList = el('ul', { class: 'mix-list' });
+  const renderMixes = () => {
+    mixList.replaceChildren();
+    const mixes = loadMixes();
+    if (!mixes.length) {
+      mixList.append(el('li', { class: 'mix-empty' }, 'Mixes you save show up here.'));
+      return;
+    }
+    for (const m of mixes) {
+      const use = el('button', { type: 'button', class: 'chip' }, m.name);
+      use.addEventListener('click', () => {
+        const setup = decodeSetup('#' + m.code, effects);
+        if (setup) {
+          app.apply(setup);
+          announce(`${m.name} on`);
+        }
+      });
+      const remove = el('button', { type: 'button', class: 'mix-remove', 'aria-label': `Remove ${m.name}` }, '×');
+      remove.addEventListener('click', () => {
+        storeMixes(loadMixes().filter((x) => x.code !== m.code));
+        renderMixes();
+        announce(`Removed ${m.name}`);
+      });
+      mixList.append(el('li', { class: 'mix' }, use, remove));
+    }
+  };
+  const saveMix = el('button', { type: 'button', class: 'action' }, 'Save this mix');
+  saveMix.addEventListener('click', () => {
+    const on = effects.filter((fx) => app.get(fx).on);
+    if (!on.length) return;
+    const code = encodeSetup(app.current(), effects);
+    const mixes = loadMixes();
+    if (mixes.some((m) => m.code === code)) {
+      flash(saveMix, 'Already saved');
+      return;
+    }
+    const name = on.length <= 2 ? on.map((fx) => fx.name).join(' + ') : `${on[0].name} + ${on.length - 1} more`;
+    const ok = storeMixes([{ name, code }, ...mixes].slice(0, 12));
+    renderMixes();
+    flash(saveMix, ok ? 'Saved!' : 'Could not save');
+  });
+  renderMixes();
+
   body.append(
     el(
       'section',
@@ -157,8 +238,15 @@ export function buildPanel(opts: PanelOptions): Panel {
       el('h2', { id: 'presets-title', class: 'section-title' }, 'Try a preset'),
       presetRow,
       el('div', { class: 'actions' }, share, save),
-      el('div', { class: 'actions' }, allOff),
+      el('div', { class: 'actions' }, allOff, hide),
       pilotRow,
+    ),
+    el(
+      'section',
+      { class: 'quick mixes', 'aria-labelledby': 'mixes-title' },
+      el('h2', { id: 'mixes-title', class: 'section-title' }, 'My mixes'),
+      mixList,
+      el('div', { class: 'actions' }, saveMix),
     ),
   );
 
@@ -276,6 +364,7 @@ export function buildPanel(opts: PanelOptions): Panel {
     const n = app.onCount();
     count.textContent = n ? `${n} on` : 'all off';
     allOff.disabled = n === 0;
+    saveMix.disabled = n === 0;
   }
 
   app.onChange((kind) => {
