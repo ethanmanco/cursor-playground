@@ -4,7 +4,7 @@ Stack colorful effects on your cursor, tweak them, and share a link to what you 
 
 **Try it:** https://ethanmanco.github.io/cursor-playground/
 
-![Effects stacking up one by one: a particle trail, constellations, rainbow paint, a ripple grid with fireworks, and title letters pushed aside by the cursor](docs/demo.gif)
+![Effects stacking up one by one: a particle trail, constellations, rainbow paint, a ripple grid with fireworks, and a rocket cursor](docs/demo.gif)
 
 ## What it is
 
@@ -16,6 +16,7 @@ It works with a mouse, a finger, or a pen.
 
 | Category | Effect | What it does |
 | --- | --- | --- |
+| Your cursor | Custom cursor | Swap the arrow for a rocket, UFO, orb, ring, or star |
 | Followers | Particle trail | Glowing sparks spill out behind your cursor |
 | Followers | Glowing comet | A bright comet chases your cursor on a spring |
 | Followers | Ribbon snake | A wiggly space snake slithers after you |
@@ -27,14 +28,20 @@ It works with a mouse, a finger, or a pen.
 | Background | Parallax drift | Layers of space dust drift by and shift as you move |
 | Background | Ripple grid | A field of dots bends away from you; clicks send a ripple |
 | Background | Constellations | Drifting stars link up and reach out to your cursor |
-| Lighting | Flashlight | Lights out; shine a beam to find a hidden star map |
-| Physics | Repel field | Brings back the title, then scatters its letters away from your cursor |
+| Lighting | Flashlight | Lights out; explore a hidden star map where found stars stay lit and finished constellations draw in; click for a flare |
 | Physics | Gravity well | Your cursor pulls in drifting motes; hold down to push them away |
 | Click | Firework burst | Click or tap anywhere to set off a burst |
 | Click | Confetti pop | Click or tap to throw a handful of fluttering confetti |
 | Click | Shockwave | Click or tap to send a glowing ring rushing outward |
 
 There are also 7 presets and a **Randomize** button.
+
+More to play with:
+
+- **Autopilot:** if nobody moves for a few seconds, a ghost cursor takes over and shows the effects off. Any real move takes back control. You can switch it off in the panel.
+- **Save picture:** download a PNG of what is on screen.
+- **Share links and Copy code**, described below.
+- The title says hello, then fades after 3 seconds so it stays out of the way.
 
 ## Run it locally
 
@@ -80,7 +87,7 @@ export const sparkle: Effect<S> = {
   blurb: 'One short sentence for the panel.',
   category: 'followers',              // decides which panel group it joins
   layer: 'front',                     // 'back' draws behind the title
-  settings: [                         // 2 or 3 controls
+  settings: [                         // 2 or 3 controls: 'range', 'color', or 'choice'
     { kind: 'color', key: 'color', label: 'Color', default: '#6ee7ff' },
     { kind: 'range', key: 'size', label: 'Size', min: 2, max: 20, step: 1, default: 8 },
   ],
