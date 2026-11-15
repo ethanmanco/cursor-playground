@@ -12,7 +12,7 @@ A small interactive toy set in deep space. Pick effects from the panel, mix seve
 
 It works with a mouse, a finger, or a pen.
 
-## The 23 effects
+## The 25 effects
 
 | Category | Effect | What it does |
 | --- | --- | --- |
@@ -21,15 +21,16 @@ It works with a mouse, a finger, or a pen.
 | Followers | Glowing comet | A bright comet chases your cursor on a spring |
 | Followers | Ribbon snake | A wiggly space snake slithers after you |
 | Followers | Watching eyes | Eyes around the screen follow you, and sometimes blink |
+| Followers | Fireflies | Hold still and fireflies gather around you; move fast to scatter them |
+| Followers | Orbiting moons | Little moons circle your cursor and trail along behind you |
 | Followers | Boids flock | A flock of tiny ships follows you; press to scatter them |
 | Drawing | Fading ink | A brush-pen line that thins when you move fast, then fades |
 | Drawing | Rainbow paint | Paint with a brush that cycles through the rainbow |
 | Psychedelic | Color trip | Slowly rolls every color on screen around the rainbow |
-| Psychedelic | Kaleidoscope | Draw, and your lines bloom into a turning mirror pattern |
-| Psychedelic | Lava lamp | Glowing goo blobs drift, melt together, and follow you |
-| Psychedelic | Hypno spiral | Rainbow spiral arms turn slowly around your cursor |
+| Psychedelic | Lava lamp | Glossy goo blobs drift, melt together, and follow you (WebGL) |
 | Psychedelic | Moire rings | Two sets of rings overlap into wobbly op art patterns |
 | Psychedelic | Echo cursors | Rainbow ghost cursors replay your moves a beat behind |
+| Background | Aurora | Soft northern lights ripple across the sky and lean toward you |
 | Background | Starfield warp | Fly through space toward your cursor; move fast to boost |
 | Background | Parallax drift | Layers of space dust drift by and shift as you move |
 | Background | Ripple grid | A field of dots bends away from you; clicks send a ripple |
@@ -37,15 +38,18 @@ It works with a mouse, a finger, or a pen.
 | Lighting | Flashlight | Lights out; explore a hidden star map where found stars stay lit and finished constellations draw in; click for a flare |
 | Physics | Gravity well | Your cursor pulls in drifting motes; hold down to push them away |
 | Click | Firework burst | Click or tap anywhere to set off a burst |
+| Click | Soap bubbles | Press and hold to blow bubbles; touch them to pop them |
 | Click | Confetti pop | Click or tap to throw a handful of fluttering confetti |
 | Click | Shockwave | Click or tap to send a glowing ring rushing outward |
 
-There are also 10 presets and a **Randomize** button.
+There are also 11 presets and a **Randomize** button.
 
 More to play with:
 
 - **Autopilot:** if nobody moves for a few seconds, a ghost cursor takes over and shows the effects off. Any real move takes back control. You can switch it off in the panel.
 - **Save picture:** download a PNG of what is on screen.
+- **My mixes:** save setups you like. They stay in your browser, ready to bring back with one click.
+- **Zen mode:** hide the panel for a clean view. Press Escape or **Show panel** to bring it back.
 - **Share links and Copy code**, described below.
 - The title says hello, then fades after 3 seconds so it stays out of the way.
 
@@ -62,7 +66,7 @@ Pushing to `main` deploys to GitHub Pages through `.github/workflows/deploy.yml`
 
 ## How it works
 
-- **Vite + TypeScript**, drawn with **Canvas 2D**. No UI framework.
+- **Vite + TypeScript**, drawn with **Canvas 2D**. No UI framework. The lava lamp is the one effect that uses **WebGL**, because a per-pixel shader makes its glossy goo smooth and fast; it falls back to soft circles without WebGL.
 - **One shared animation loop** runs every effect. It sleeps when nothing is on and pauses while the tab is hidden.
 - **Two canvas layers** sit behind and in front of the title, so background effects stay behind the text.
 - **A shared particle budget** (1500 on desktop, 500 on touch devices) keeps phones smooth no matter how many effects you stack.
