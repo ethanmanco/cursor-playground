@@ -2,6 +2,7 @@ import type { Effect } from '../engine/types';
 import { trip } from './trip';
 import { lava } from './lava';
 import { skyTheme } from './sky';
+import { supernova } from './supernova';
 import { smoke } from './smoke';
 import { shootingStars } from './meteors';
 import { magnet } from './magnet';
@@ -37,6 +38,7 @@ import { customCursor } from './cursor';
  */
 export const EFFECTS: Effect[] = [
   skyTheme,
+  supernova,
   trip,
   smoke,
   lava,

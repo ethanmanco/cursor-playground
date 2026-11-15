@@ -12,7 +12,7 @@ A small interactive toy set in deep space. Pick effects from the panel, mix seve
 
 It works with a mouse, a finger, or a pen.
 
-## The 28 effects
+## The 29 effects
 
 | Category | Effect | What it does |
 | --- | --- | --- |
@@ -43,6 +43,7 @@ It works with a mouse, a finger, or a pen.
 | Click | Firework burst | Click or tap anywhere to set off a burst |
 | Click | Soap bubbles | Press and hold to blow bubbles; touch them to pop them |
 | Click | Confetti pop | Click or tap to throw a handful of fluttering confetti |
+| Click | Supernova | Double-click or double-tap: the background stars fall inward, then everything explodes and the stars fly home |
 | Click | Shockwave | Click or tap to send a glowing ring rushing outward |
 
 There are also 12 presets and a **Randomize** button.
@@ -53,14 +54,13 @@ More to play with:
 - **Save picture:** download a PNG of what is on screen.
 - **My mixes:** save setups you like. They stay in your browser, ready to bring back with one click.
 - **Zen mode:** hide the panel for a clean view. Press Escape or **Show panel** to bring it back.
-- **Supernova:** double-click or double-tap anywhere (or press N). Everything gets pulled into one point, then bursts outward.
 - **Slow motion and freeze:** hold Space (or press **Slow motion**) to drop to 20% speed, and press F (or **Freeze**) to stop time.
 - **Effects react to each other:** shockwaves shove particles and pop bubbles, fireworks wake up fireflies and briefly light up the flashlight's hidden map, shooting stars pop bubbles, and the gravity well pulls on everything.
 - **Sound (optional):** off by default. Soft generated sounds for fireworks, pops, wishes, flares, and supernovas, panned left and right and lower in slow motion. Press M to toggle.
 - **Tour:** plays every preset in turn while the ghost cursor shows it off. Any click or key press stops it.
 - **Tilt to steer (phones):** tilt your phone to roll a glowing marble around the screen, and the effects follow it. Confetti, fireworks, bubbles, and parallax also lean with the tilt.
 - **Link previews:** shared links show a picture and title in messages and social posts.
-- **Keyboard shortcuts:** R randomize, 1 to 9 presets, T tour, Space slow motion, F freeze, N supernova, M sound, H hide panel, S save picture, L copy link, ? for the list.
+- **Keyboard shortcuts:** R randomize, 1 to 9 presets, T tour, Space slow motion, F freeze, N supernova (when it is on), M sound, H hide panel, S save picture, L copy link, ? for the list.
 - **Share links and Copy code**, described below.
 - The title says hello, then fades after 3 seconds so it stays out of the way.
 

@@ -22,8 +22,8 @@ export interface PanelOptions {
   setTimeScale(scale: number): void;
   /** Optional sound effects. */
   sound: { get(): boolean; set(on: boolean): void };
-  /** Set off a supernova at the cursor (or the middle of the screen). */
-  supernova(): void;
+  /** Set off a supernova at the cursor. Returns false if the Supernova effect is off. */
+  supernova(): boolean;
 }
 
 export interface Panel {
@@ -299,7 +299,7 @@ export function buildPanel(opts: PanelOptions): Panel {
     ['T', 'Start or stop the tour'],
     ['Space (hold)', 'Slow motion'],
     ['F', 'Freeze or unfreeze'],
-    ['N', 'Supernova'],
+    ['N', 'Supernova (when it is on)'],
     ['M', 'Sound on or off'],
     ['H', 'Hide or show the panel'],
     ['S', 'Save picture'],
@@ -351,7 +351,9 @@ export function buildPanel(opts: PanelOptions): Panel {
     else if (k === 'l') share.click();
     else if (k === 't') setTour(!touring);
     else if (k === 'f') freezeBtn.click();
-    else if (k === 'n') opts.supernova();
+    else if (k === 'n') {
+      if (!opts.supernova()) announce('Turn on Supernova in the Click group first.');
+    }
     else if (k === 'm') toggleSound();
     else if (e.key === ' ') {
       // Space presses focused buttons and switches, so only use it elsewhere.
@@ -444,7 +446,6 @@ export function buildPanel(opts: PanelOptions): Panel {
       el('div', { class: 'actions' }, allOff, hide),
       el('div', { class: 'actions' }, tour),
       el('div', { class: 'actions' }, slowBtn, freezeBtn),
-      el('p', { class: 'hint' }, 'Double-click (or double-tap) anywhere for a supernova.'),
       soundRow,
       pilotRow,
       ...(tiltRow ? [tiltRow] : []),

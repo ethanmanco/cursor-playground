@@ -7,9 +7,9 @@ import { cleanValue, decodeSetup, encodeSetup, fullValues } from './setup';
 const byId = (id: string) => EFFECTS.find((e) => e.id === id)!;
 
 describe('effect registry', () => {
-  it('has the 28 effects with unique ids', () => {
-    expect(EFFECTS).toHaveLength(28);
-    expect(new Set(EFFECTS.map((e) => e.id)).size).toBe(28);
+  it('has the 29 effects with unique ids', () => {
+    expect(EFFECTS).toHaveLength(29);
+    expect(new Set(EFFECTS.map((e) => e.id)).size).toBe(29);
   });
 
   it('names every effect file after its id (Copy code relies on this)', () => {

@@ -9,7 +9,7 @@ import { paintSky } from './ui/sky';
 import { savePicture } from './ui/snapshot';
 import { tiltSteer } from './ui/tiltsteer';
 import { createSound } from './ui/sound';
-import { aimSupernova, supernova } from './effects/supernova';
+import { triggerSupernova } from './effects/supernova';
 import { recalibrate, requestTilt } from './engine/tilt';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -93,24 +93,6 @@ const soundPref = {
   },
 };
 
-// Supernova: double-click or double-tap anywhere (or press N).
-function boom(x: number, y: number) {
-  if (engine.isOn('supernova')) return;
-  aimSupernova(x, y);
-  engine.enable(supernova, {});
-}
-let lastTap = { t: 0, x: 0, y: 0 };
-$('stage').addEventListener('pointerdown', (e) => {
-  if (!e.isTrusted) return;
-  const now = performance.now();
-  if (now - lastTap.t < 320 && Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < 40) {
-    boom(e.clientX, e.clientY);
-    lastTap = { t: 0, x: 0, y: 0 };
-  } else {
-    lastTap = { t: now, x: e.clientX, y: e.clientY };
-  }
-});
-
 // Tilt to steer is offered on touch devices that report motion.
 const canTilt = 'DeviceOrientationEvent' in window && matchMedia('(pointer: coarse)').matches;
 const steer = canTilt ? tiltSteer($('stage'), engine.env.tilt) : null;
@@ -139,8 +121,10 @@ const panel = buildPanel({
   setTimeScale: (scale) => engine.setTimeScale(scale),
   sound: soundPref,
   supernova() {
+    if (!engine.isOn('supernova')) return false;
     const p = engine.env.pointer;
-    boom(p.inside ? p.x : innerWidth / 2, p.inside ? p.y : innerHeight / 2);
+    triggerSupernova(p.inside ? p.x : innerWidth / 2, p.inside ? p.y : innerHeight / 2);
+    return true;
   },
   onTour(on) {
     touring = on;
