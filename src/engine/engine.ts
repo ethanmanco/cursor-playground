@@ -1,7 +1,7 @@
 import { createBudget, defaultCap } from './budget';
 import { trackPointer, type PointerTracker } from './pointer';
 import { trackTilt } from './tilt';
-import type { Effect, Env, Values } from './types';
+import type { Blast, Cue, Effect, Env, Values } from './types';
 
 interface Active {
   effect: Effect;
@@ -27,8 +27,11 @@ export class Engine {
   private tracker: PointerTracker;
   private raf = 0;
   private last = 0;
-  private start = performance.now();
   private order: Map<string, number>;
+  private nextBlasts: Blast[] = [];
+  private scaleTarget = 1;
+  /** Called for every sound cue; the app plugs its sound player in here. */
+  onCue: ((name: Cue, x: number, strength: number) => void) | null = null;
   private tiltTick: (dt: number) => void;
 
   constructor(private opts: EngineOptions) {
@@ -47,6 +50,12 @@ export class Engine {
       time: 0,
       budget: createBudget(defaultCap()),
       tilt: { x: 0, y: 0, active: false },
+      timeScale: 1,
+      blasts: [],
+      blast: (b) => {
+        if (this.nextBlasts.length < 64) this.nextBlasts.push(b);
+      },
+      cue: (name, x, strength) => this.onCue?.(name, x ?? this.env.width / 2, strength ?? 1),
     };
     this.tiltTick = trackTilt(this.env.tilt);
     this.resize();
@@ -55,6 +64,15 @@ export class Engine {
       if (document.hidden) this.stop();
       else this.wake();
     });
+  }
+
+  /** Ease toward a new speed: 1 normal, 0.2 slow motion, 0 frozen. */
+  setTimeScale(target: number): void {
+    this.scaleTarget = target;
+  }
+
+  get timeScaleTarget(): number {
+    return this.scaleTarget;
   }
 
   isOn(id: string): boolean {
@@ -119,13 +137,26 @@ export class Engine {
   }
 
   private frame = (now: number): void => {
-    const dt = Math.min(Math.max((now - this.last) / 1000, 0), 0.05);
+    const real = Math.min(Math.max((now - this.last) / 1000, 0), 0.05);
     this.last = now;
-    this.env.time = (now - this.start) / 1000;
-    this.tracker.beginFrame(dt);
-    this.tiltTick(dt);
+    // Ease the speed so slow motion glides in and out.
+    const env = this.env;
+    env.timeScale += (this.scaleTarget - env.timeScale) * Math.min(1, real * 8);
+    if (Math.abs(env.timeScale - this.scaleTarget) < 0.01) env.timeScale = this.scaleTarget;
+    const dt = real * env.timeScale;
+    env.time += dt;
+    this.tracker.beginFrame(real);
+    this.tiltTick(real);
 
-    for (const a of this.active) a.effect.update(dt, this.env, a.values);
+    // Last frame's blasts become readable; this frame's start fresh.
+    env.blasts = this.nextBlasts;
+    this.nextBlasts = [];
+
+    for (const a of this.active) a.effect.update(dt, env, a.values);
+
+    // One-off effects (like a supernova) can switch themselves off.
+    for (const a of this.active.filter((a) => a.effect.finished?.())) this.disable(a.effect);
+    if (!this.active.length) return;
 
     this.clear();
     for (const a of this.active) {

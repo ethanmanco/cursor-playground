@@ -74,6 +74,21 @@ export interface Budget {
   readonly used: number;
 }
 
+/** A push, pull, or flash of light that other effects can react to. */
+export interface Blast {
+  x: number;
+  y: number;
+  radius: number;
+  /** Push and pull: acceleration in px/s^2 at the center. Light: 0..1. */
+  strength: number;
+  kind: 'push' | 'pull' | 'light';
+  /** True for an expanding ring: only a band around `radius` is affected. */
+  ring?: boolean;
+}
+
+/** Names of moments that can have a sound. */
+export type Cue = 'firework' | 'confetti' | 'pop' | 'shockwave' | 'wish' | 'flare' | 'constellation' | 'collapse' | 'boom';
+
 export interface Env {
   front: CanvasRenderingContext2D;
   back: CanvasRenderingContext2D;
@@ -87,6 +102,14 @@ export interface Env {
   budget: Budget;
   /** Phone tilt from -1 to 1 in screen directions. Zero on desktops. */
   tilt: { x: number; y: number; active: boolean };
+  /** 1 is normal speed, 0.2 is slow motion, 0 is frozen. dt already includes it. */
+  timeScale: number;
+  /** Blasts from other effects during the last frame. Use blastAt() to read them. */
+  blasts: readonly Blast[];
+  /** Add a blast for other effects to react to next frame. */
+  blast(b: Blast): void;
+  /** Mark a moment that may play a sound (if sound is on). x is the screen position, for stereo. */
+  cue(name: Cue, x?: number, strength?: number): void;
 }
 
 export interface Effect<S extends Values = Values> {
@@ -109,6 +132,8 @@ export interface Effect<S extends Values = Values> {
   resize?(env: Env): void;
   /** Give back budget and undo any DOM changes. */
   teardown(env: Env): void;
+  /** Optional: return true when a one-off effect is done, and the engine turns it off. */
+  finished?(): boolean;
 }
 
 export function defaultValues(effect: Effect): Values {
