@@ -53,6 +53,7 @@ export const shootingStars: Effect<S> = {
 
   onPointerDown(env) {
     const { x, y } = env.pointer;
+    env.cue('wish', x);
     const n = 4 + Math.floor(Math.random() * 3);
     const base = Math.random() * Math.PI * 2;
     for (let i = 0; i < n; i++) launch(x, y, base + (i / n) * Math.PI * 2 + Math.random() * 0.3, 450 + Math.random() * 350);
@@ -76,6 +77,8 @@ export const shootingStars: Effect<S> = {
         meteors.splice(i, 1);
         continue;
       }
+      // A meteor's head is small but hard: it pops bubbles in its path.
+      env.blast({ x: m.x, y: m.y, radius: 22, strength: 2500, kind: 'push' });
       // Shed a little glittering dust.
       if (Math.random() < 0.5 && env.budget.take(1)) {
         dust.push({ x: m.x, y: m.y, vx: m.vx * 0.05 + (Math.random() - 0.5) * 30, vy: m.vy * 0.05 + (Math.random() - 0.5) * 30, life: 0.5 + Math.random() * 0.5 });

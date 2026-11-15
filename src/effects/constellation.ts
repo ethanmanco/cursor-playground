@@ -1,4 +1,5 @@
 import type { Effect } from '../engine/types';
+import { blastAt } from '../engine/blasts';
 import { rgba } from './lib/color';
 
 type S = { color: string; count: number; reach: number };
@@ -47,6 +48,17 @@ export const constellation: Effect<S> = {
     stars.length = want;
     const { width: W, height: H } = env;
     for (const st of stars) {
+      const hit = blastAt(env.blasts, st.x, st.y);
+      if (hit.fx || hit.fy) {
+        st.vx += hit.fx * 0.3 * dt;
+        st.vy += hit.fy * 0.3 * dt;
+      }
+      // Drift back toward a calm speed after being shoved.
+      const sp = Math.hypot(st.vx, st.vy);
+      if (sp > 20) {
+        st.vx *= Math.pow(0.6, dt);
+        st.vy *= Math.pow(0.6, dt);
+      }
       st.x += st.vx * dt;
       st.y += st.vy * dt;
       if (st.x < -20) st.x += W + 40;

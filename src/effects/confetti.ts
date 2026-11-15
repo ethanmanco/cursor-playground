@@ -1,4 +1,5 @@
 import type { Effect } from '../engine/types';
+import { blastAt } from '../engine/blasts';
 
 type S = { amount: number; power: number; size: number };
 
@@ -37,6 +38,7 @@ export const confetti: Effect<S> = {
 
   onPointerDown(env, s) {
     const { x, y } = env.pointer;
+    env.cue('confetti', x);
     const n = env.budget.take(s.amount);
     for (let i = 0; i < n; i++) {
       // Mostly upward, in a wide cone.
@@ -72,8 +74,9 @@ export const confetti: Effect<S> = {
         continue;
       }
       // Tilting a phone tips gravity sideways.
-      c.vx = c.vx * drag + env.tilt.x * 380 * dt;
-      c.vy = c.vy * drag + (420 + env.tilt.y * 180) * dt;
+      const b = blastAt(env.blasts, c.x, c.y);
+      c.vx = c.vx * drag + (env.tilt.x * 380 + b.fx) * dt;
+      c.vy = c.vy * drag + (420 + env.tilt.y * 180 + b.fy) * dt;
       // Flat pieces catch the air and sway side to side.
       c.x += (c.vx + Math.sin(c.flip) * 30) * dt;
       c.y += c.vy * dt;

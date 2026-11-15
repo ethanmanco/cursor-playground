@@ -1,4 +1,5 @@
 import type { Effect, Env } from '../engine/types';
+import { blastAt } from '../engine/blasts';
 import { hexToHue } from './lib/color';
 
 type S = { color: string; count: number; speed: number };
@@ -85,8 +86,9 @@ export const boids: Effect<S> = {
         fx += (dx / d) * k;
         fy += (dy / d) * k;
       }
-      b.vx += fx * dt;
-      b.vy += fy * dt;
+      const hit = blastAt(env.blasts, b.x, b.y);
+      b.vx += (fx + hit.fx) * dt;
+      b.vy += (fy + hit.fy) * dt;
       const sp = Math.hypot(b.vx, b.vy) || 1;
       const clamped = Math.min(max * (p.down ? 2 : 1), Math.max(max * 0.4, sp));
       b.vx = (b.vx / sp) * clamped;

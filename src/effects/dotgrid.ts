@@ -1,4 +1,5 @@
 import type { Effect, Env } from '../engine/types';
+import { blastAt } from '../engine/blasts';
 import { rgba } from './lib/color';
 
 type S = { color: string; spacing: number; radius: number };
@@ -102,6 +103,11 @@ export const dotGrid: Effect<S> = {
           fx += (dx / d) * f;
           fy += (dy / d) * f;
         }
+      }
+      if (env.blasts.length) {
+        const hit = blastAt(env.blasts, x, y);
+        fx += hit.fx * 0.6;
+        fy += hit.fy * 0.6;
       }
       velX[i] += fx * dt;
       velY[i] += fy * dt;

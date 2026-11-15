@@ -31,12 +31,18 @@ export const shockwave: Effect<S> = {
 
   onPointerDown(env) {
     waves.push({ x: env.pointer.x, y: env.pointer.y, age: 0 });
+    env.cue('shockwave', env.pointer.x);
     if (waves.length > 8) waves.shift();
   },
 
-  update(dt, _env, s) {
+  update(dt, env, s) {
     const duration = 1.6 - s.speed * 0.12;
-    for (const w of waves) w.age += dt / duration;
+    for (const w of waves) {
+      w.age += dt / duration;
+      // The ring shoves whatever other effects it passes over.
+      const t = Math.min(1, w.age);
+      env.blast({ x: w.x, y: w.y, radius: 6 + easeOut(t) * s.size, strength: 7000 * (1 - t), kind: 'push', ring: true });
+    }
     while (waves.length && waves[0].age >= 1) waves.shift();
   },
 

@@ -1,4 +1,5 @@
 import type { Effect, Env } from '../engine/types';
+import { blastAt } from '../engine/blasts';
 import { hexToHue } from './lib/color';
 
 type S = { color: string; pull: number; count: number };
@@ -63,6 +64,8 @@ export const gravity: Effect<S> = {
 
     const p = env.pointer;
     const G = s.pull * 4e6 * (p.down ? -0.6 : 1);
+    // Other effects feel the well too.
+    if (p.inside) env.blast({ x: p.x, y: p.y, radius: 340, strength: s.pull * 110, kind: p.down ? 'push' : 'pull' });
     const drag = Math.pow(0.996, dt * 60);
     for (const m of motes) {
       m.px = m.x;
@@ -80,8 +83,9 @@ export const gravity: Effect<S> = {
         m.vx += (dx / d) * a * dt;
         m.vy += (dy / d) * a * dt;
       }
-      m.vx *= drag;
-      m.vy *= drag;
+      const hit = blastAt(env.blasts, m.x, m.y);
+      m.vx = m.vx * drag + hit.fx * dt;
+      m.vy = m.vy * drag + hit.fy * dt;
       const speed = Math.hypot(m.vx, m.vy);
       if (speed > 900) {
         m.vx *= 900 / speed;

@@ -1,4 +1,5 @@
 import type { Effect } from '../engine/types';
+import { blastAt } from '../engine/blasts';
 import { hexToHue } from './lib/color';
 
 type S = { color: string; sparks: number; power: number };
@@ -62,6 +63,7 @@ export const fireworks: Effect<S> = {
       });
     }
     flashes.push({ x, y, life: 0.25 });
+    env.cue('firework', x, s.sparks / 80);
   },
 
   update(dt, env) {
@@ -77,10 +79,17 @@ export const fireworks: Effect<S> = {
       }
       e.px = e.x;
       e.py = e.y;
-      e.vx = e.vx * drag + env.tilt.x * 150 * dt;
-      e.vy = e.vy * drag + (160 + env.tilt.y * 70) * dt;
+      const b = blastAt(env.blasts, e.x, e.y);
+      e.vx = e.vx * drag + (env.tilt.x * 150 + b.fx * 0.4) * dt;
+      e.vy = e.vy * drag + (160 + env.tilt.y * 70 + b.fy * 0.4) * dt;
       e.x += e.vx * dt;
       e.y += e.vy * dt;
+    }
+    for (const f of flashes) {
+      // A brief push and a flash of light that other effects notice.
+      const k = f.life / 0.25;
+      env.blast({ x: f.x, y: f.y, radius: 170, strength: 2600 * k, kind: 'push' });
+      env.blast({ x: f.x, y: f.y, radius: 300, strength: k, kind: 'light' });
     }
     for (let i = flashes.length - 1; i >= 0; i--) {
       flashes[i].life -= dt;

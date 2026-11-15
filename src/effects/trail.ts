@@ -1,4 +1,5 @@
 import type { Effect } from '../engine/types';
+import { blastAt } from '../engine/blasts';
 import { glowSprite } from './lib/color';
 
 type S = { color: string; size: number; amount: number };
@@ -71,8 +72,9 @@ export const trail: Effect<S> = {
         env.budget.give(1);
         continue;
       }
-      k.vx *= drag;
-      k.vy = k.vy * drag - 12 * dt; // a slight upward float
+      const b = blastAt(env.blasts, k.x, k.y);
+      k.vx = k.vx * drag + b.fx * dt;
+      k.vy = k.vy * drag + (b.fy - 12) * dt; // a slight upward float
       k.x += k.vx * dt;
       k.y += k.vy * dt;
     }

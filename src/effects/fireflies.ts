@@ -1,4 +1,5 @@
 import type { Effect } from '../engine/types';
+import { blastAt } from '../engine/blasts';
 import { glowSprite } from './lib/color';
 
 type S = { color: string; count: number; trust: number };
@@ -7,6 +8,8 @@ type S = { color: string; count: number; trust: number };
 // over to gather around it. Move fast and they scatter.
 
 interface Fly {
+  /** 0..1, set by flashes of light (like fireworks), fades back down. */
+  wake: number;
   x: number;
   y: number;
   vx: number;
@@ -49,6 +52,7 @@ export const fireflies: Effect<S> = {
         heading: Math.random() * Math.PI * 2,
         phase: Math.random() * Math.PI * 2,
         rate: 0.6 + Math.random() * 0.9,
+        wake: 0,
       });
     }
     flies.length = want;
@@ -77,6 +81,11 @@ export const fireflies: Effect<S> = {
           ay += (dy / d) * pull;
         }
       }
+      // Flashes of light wake fireflies up: they glow bright and dart about.
+      const hit = blastAt(env.blasts, f.x, f.y);
+      f.wake = Math.max(f.wake * Math.pow(0.35, dt), hit.light);
+      ax += hit.fx + Math.cos(f.heading) * f.wake * 160;
+      ay += hit.fy + Math.sin(f.heading) * f.wake * 160;
       f.vx = (f.vx + ax * dt) * Math.pow(0.4, dt);
       f.vy = (f.vy + ay * dt) * Math.pow(0.4, dt);
       f.x += f.vx * dt;
@@ -97,7 +106,7 @@ export const fireflies: Effect<S> = {
     ctx.globalCompositeOperation = 'lighter';
     for (const f of flies) {
       // A slow, soft pulse (well under once a second), never a flash.
-      const glow = 0.25 + 0.75 * Math.max(0, Math.sin(env.time * f.rate + f.phase)) ** 2;
+      const glow = Math.max(f.wake, 0.25 + 0.75 * Math.max(0, Math.sin(env.time * f.rate + f.phase)) ** 2);
       const r = 6 + glow * 10;
       ctx.globalAlpha = glow;
       ctx.drawImage(sprite, f.x - r, f.y - r, r * 2, r * 2);

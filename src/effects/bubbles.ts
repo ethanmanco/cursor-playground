@@ -1,4 +1,5 @@
 import type { Effect, Env } from '../engine/types';
+import { blastAt } from '../engine/blasts';
 
 type S = { size: number; amount: number; tint: number };
 
@@ -48,6 +49,7 @@ function blow(env: Env, s: S, n: number) {
 
 function pop(env: Env, i: number) {
   const b = bubbles[i];
+  env.cue('pop', b.x, b.r / 30);
   pops.push({ x: b.x, y: b.y, r: b.r, age: 0 });
   bubbles[i] = bubbles[bubbles.length - 1];
   bubbles.pop();
@@ -90,13 +92,17 @@ export const soapBubbles: Effect<S> = {
       b.wobble += dt * 3;
       b.film += dt * 40;
       // Bubbles drift up, and away from whichever way a phone is tipped.
-      b.vx = b.vx * Math.pow(0.5, dt) + (Math.sin(b.wobble * 0.7) * 12 - env.tilt.x * 40) * dt;
-      b.vy = b.vy * Math.pow(0.5, dt) - (18 + env.tilt.y * 14) * dt;
+      const hit = blastAt(env.blasts, b.x, b.y);
+      b.vx = b.vx * Math.pow(0.5, dt) + (Math.sin(b.wobble * 0.7) * 12 - env.tilt.x * 40 + hit.fx * 0.5) * dt;
+      b.vy = b.vy * Math.pow(0.5, dt) - (18 + env.tilt.y * 14 - hit.fy * 0.5) * dt;
       b.x += b.vx * dt;
       b.y += b.vy * dt;
       const gone = b.y < -b.r * 2 || b.age > 14;
       // Pop on touch (not while still blowing them out of the wand).
-      const touched = p.inside && !p.down && b.age > 0.4 && Math.hypot(p.x - b.x, p.y - b.y) < b.r;
+      const touched =
+        (p.inside && !p.down && b.age > 0.4 && Math.hypot(p.x - b.x, p.y - b.y) < b.r) ||
+        // Shockwaves, fireworks, and shooting stars pop bubbles too.
+        (b.age > 0.2 && hit.push > 1200);
       if (touched) pop(env, i);
       else if (gone) {
         bubbles[i] = bubbles[bubbles.length - 1];

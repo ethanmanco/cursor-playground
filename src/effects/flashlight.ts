@@ -172,8 +172,10 @@ function paintDust(env: Env, color: string) {
   }
 }
 
-function lights(R: number): Light[] {
+function lights(R: number, env: Env): Light[] {
   const out: Light[] = [{ x: lx, y: ly, r: R, a: 1 }];
+  // Flashes from other effects (fireworks, supernova) light up the map too.
+  for (const b of env.blasts) if (b.kind === 'light' && b.strength > 0.05) out.push({ x: b.x, y: b.y, r: b.radius, a: b.strength });
   for (const f of flares) {
     const grow = 1 - Math.pow(1 - Math.min(1, f.age / 0.35), 3);
     out.push({ x: f.x, y: f.y, r: R * (0.8 + 1.8 * grow), a: 1 - f.age / FLARE_LIFE });
@@ -204,6 +206,7 @@ export const flashlight: Effect<S> = {
 
   onPointerDown(env) {
     flares.push({ x: env.pointer.x, y: env.pointer.y, age: 0 });
+    env.cue('flare', env.pointer.x);
     if (flares.length > 3) flares.shift();
   },
 
@@ -227,7 +230,7 @@ export const flashlight: Effect<S> = {
     while (flares.length && flares[0].age > FLARE_LIFE) flares.shift();
 
     // Discover stars inside any light.
-    const ls = lights(s.radius);
+    const ls = lights(s.radius, env);
     for (const st of stars) {
       if (st.found >= 1) continue;
       for (const l of ls) {
@@ -243,6 +246,7 @@ export const flashlight: Effect<S> = {
       if (!g.done && g.stars.every((i) => stars[i].found >= 1)) {
         g.done = true;
         g.doneAt = env.time;
+        env.cue('constellation', g.cx);
         const n = env.budget.take(30);
         for (let i = 0; i < n; i++) {
           const st = stars[g.stars[i % g.stars.length]];
@@ -313,7 +317,7 @@ export const flashlight: Effect<S> = {
     lc.globalCompositeOperation = 'source-over';
     lc.clearRect(0, 0, W, H);
     lc.globalCompositeOperation = 'lighter';
-    for (const l of lights(s.radius)) {
+    for (const l of lights(s.radius, env)) {
       const g = lc.createRadialGradient(l.x, l.y, 0, l.x, l.y, l.r);
       g.addColorStop(0, `rgba(255,255,255,${l.a})`);
       g.addColorStop(0.5, `rgba(255,255,255,${l.a * 0.9})`);
