@@ -1,6 +1,5 @@
 import type { Effect } from '../engine/types';
 import { trip } from './trip';
-import { silk } from './silk';
 import { skyTheme } from './sky';
 import { supernova } from './supernova';
 import { halo } from './halo';
@@ -26,6 +25,10 @@ import { ribbon } from './ribbon';
 import { comet } from './comet';
 import { trail } from './trail';
 import { echo } from './echo';
+import { timeLoop } from './loop';
+import { chroma } from './chroma';
+import { conga } from './conga';
+import { cursorRain } from './rain';
 import { soapBubbles } from './bubbles';
 import { confetti } from './confetti';
 import { fireworks } from './fireworks';
@@ -45,7 +48,6 @@ export const EFFECTS: Effect[] = [
   halo,
   trip,
   smoke,
-  silk,
   aurora,
   shootingStars,
   warp,
@@ -64,11 +66,15 @@ export const EFFECTS: Effect[] = [
   dandelionSeeds,
   orbit,
   comet,
+  conga,
   trail,
   pondRipples,
   echo,
+  chroma,
+  timeLoop,
   soapBubbles,
   confetti,
+  cursorRain,
   fireworks,
   shockwave,
   customCursor,

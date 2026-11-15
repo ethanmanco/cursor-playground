@@ -69,7 +69,7 @@ export const PRESETS: Preset[] = [
   {
     name: 'Mind melt',
     setup: {
-      silk: { ribbons: 3, speed: 3, shine: 6 },
+      chroma: { spread: 6, size: 22, trail: 5 },
       echo: { copies: 10, delay: 3, spin: 4 },
       trip: { speed: 3, boost: 170 },
     },
@@ -97,6 +97,15 @@ export const PRESETS: Preset[] = [
       smoke: { density: 4, swirl: 6, colors: 3 },
       meteors: { color: '#fff3cf', amount: 5, length: 6 },
       cursor: { shape: 'planet', color: '#ffd166', size: 26 },
+    },
+  },
+  {
+    name: 'Cursor party',
+    setup: {
+      conga: { color: '#ffd166', count: 10, spacing: 24 },
+      echo: { copies: 8, delay: 3, spin: 0 },
+      loop: { color: '#c9a7ff', length: 3, layers: 2 },
+      rain: { amount: 16, size: 13, bounce: 6 },
     },
   },
   {

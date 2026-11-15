@@ -12,7 +12,7 @@ A small interactive toy set in deep space. Pick effects from the panel, mix seve
 
 It works with a mouse, a finger, or a pen.
 
-## The 32 effects
+## The 35 effects
 
 | Category | Effect | What it does |
 | --- | --- | --- |
@@ -23,6 +23,7 @@ It works with a mouse, a finger, or a pen.
 | Followers | Glowing comet | A bright comet chases your cursor on a spring |
 | Followers | Ribbon snake | A wiggly space snake slithers after you |
 | Followers | Watching eyes | Eyes around the screen follow you, and sometimes blink |
+| Followers | Cursor conga | A line of little cursors follows in your footsteps |
 | Followers | Pond ripples | Quiet ripples spread out behind your cursor, like a finger in water |
 | Followers | Fireflies | Hold still and fireflies gather around you; move fast to scatter them |
 | Followers | Orbiting moons | Little moons circle your cursor and trail along behind you |
@@ -30,9 +31,10 @@ It works with a mouse, a finger, or a pen.
 | Drawing | Fading ink | A brush-pen line that thins when you move fast, then fades |
 | Drawing | Rainbow paint | Paint with a brush that cycles through the rainbow |
 | Psychedelic | Color trip | Slowly rolls every color on screen around the rainbow |
-| Psychedelic | Silk ribbons | Shimmering ribbons of light wave slowly and bend toward you |
 | Psychedelic | Cosmic dust | Faint glowing gas and dust drift among the stars and swirl around you (WebGL) |
 | Psychedelic | Echo cursors | Rainbow ghost cursors replay your moves a beat behind |
+| Psychedelic | Chromatic cursor | Red, green, and blue copies of your cursor split apart as you move |
+| Psychedelic | Time loop | A ghost of you replays your moves and clicks a few seconds later |
 | Background | Dandelion seeds | Seeds float on a soft breeze; move through them to stir up a gust |
 | Background | Aurora | Northern lights with real-looking rays ripple across the sky and lean toward you (WebGL) |
 | Background | Shooting stars | Shooting stars streak by; click to make a wish and start a shower |
@@ -45,11 +47,12 @@ It works with a mouse, a finger, or a pen.
 | Physics | Gravity well | Your cursor pulls in drifting motes; hold down to push them away |
 | Click | Firework burst | Click or tap anywhere to set off a burst |
 | Click | Soap bubbles | Press and hold to blow bubbles; touch them to pop them |
+| Click | Cursor rain | Click or tap to burst out tiny cursors that tumble and bounce |
 | Click | Confetti pop | Click or tap to throw a handful of fluttering confetti |
-| Click | Supernova | Double-click or double-tap: the background stars fall inward, then everything explodes and the stars fly home |
+| Click | Supernova | Double-click or double-tap: stars from all around fall inward, then everything explodes outward |
 | Click | Shockwave | Click or tap to send a glowing ring rushing outward |
 
-There are also 13 presets and a **Randomize** button.
+There are also 14 presets and a **Randomize** button.
 
 More to play with:
 
