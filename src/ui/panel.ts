@@ -14,6 +14,8 @@ export interface PanelOptions {
   savePicture(): Promise<boolean>;
   /** Whether autopilot may run when the page sits idle. */
   autopilot: { get(): boolean; set(on: boolean): void };
+  /** Called when the preset tour starts or stops. */
+  onTour(on: boolean): void;
 }
 
 export interface Panel {
@@ -163,8 +165,101 @@ export function buildPanel(opts: PanelOptions): Panel {
   };
   hide.addEventListener('click', () => setZen(true));
   zenExit.addEventListener('click', () => setZen(false));
+  // Tour: plays every preset in turn while the ghost cursor shows it off.
+  // Any real click, tap, or key press ends it.
+  const TOUR_SECONDS = 9;
+  const tour = el('button', { type: 'button', class: 'action' }, 'Start tour');
+  const tourPill = el('p', { class: 'tour-pill', 'aria-hidden': 'true' });
+  document.body.append(tourPill);
+  let touring = false;
+  let tourTimer = 0;
+  let tourIndex = 0;
+  const tourStep = () => {
+    const preset = PRESETS[tourIndex % PRESETS.length];
+    app.apply(preset.setup);
+    tourPill.textContent = `Tour: ${preset.name} (${(tourIndex % PRESETS.length) + 1} of ${PRESETS.length}). Click or press any key to stop.`;
+    tourIndex++;
+  };
+  const setTour = (on: boolean) => {
+    if (on === touring) return;
+    touring = on;
+    clearInterval(tourTimer);
+    document.body.classList.toggle('touring', on);
+    tour.textContent = on ? 'Stop tour' : 'Start tour';
+    if (on) {
+      tourIndex = 0;
+      tourStep();
+      tourTimer = window.setInterval(tourStep, TOUR_SECONDS * 1000);
+    }
+    opts.onTour(on);
+    announce(on ? 'Tour started. Press any key to stop.' : 'Tour stopped');
+  };
+  tour.addEventListener('click', (e) => {
+    e.stopPropagation();
+    setTour(!touring);
+  });
+  for (const type of ['pointerdown', 'keydown']) {
+    addEventListener(
+      type,
+      (e) => {
+        // Real input only: the ghost cursor's events are not "trusted".
+        if (!touring || !e.isTrusted || e.target === tour) return;
+        // T is the tour's own toggle key; let the shortcut handler deal with it.
+        if (e instanceof KeyboardEvent && e.key.toLowerCase() === 't') return;
+        setTour(false);
+      },
+      { capture: true },
+    );
+  }
+
+  // Keyboard shortcuts. Ignored while typing or with Ctrl, Cmd, or Alt held.
+  const SHORTCUTS: [string, string][] = [
+    ['R', 'Randomize'],
+    ['1 to 9', 'Presets 1 to 9'],
+    ['T', 'Start or stop the tour'],
+    ['H', 'Hide or show the panel'],
+    ['S', 'Save picture'],
+    ['L', 'Copy share link'],
+    ['?', 'Show these shortcuts'],
+    ['Esc', 'Show the panel again'],
+  ];
+  const showShortcuts = () => {
+    const dialog = el('dialog', { class: 'copy-dialog', 'data-cp-keep-cursor': '', 'aria-labelledby': 'keys-title' });
+    const list = el('dl', { class: 'keys' });
+    for (const [k, what] of SHORTCUTS) list.append(el('dt', {}, el('kbd', {}, k)), el('dd', {}, what));
+    const close = el('button', { type: 'button', class: 'action' }, 'Done');
+    close.addEventListener('click', () => dialog.close());
+    dialog.addEventListener('close', () => dialog.remove());
+    dialog.append(el('h2', { id: 'keys-title' }, 'Keyboard shortcuts'), list, close);
+    document.body.append(dialog);
+    dialog.showModal();
+    close.focus();
+  };
+  const keysButton = el('button', { type: 'button', class: 'link-button' }, 'Keyboard shortcuts');
+  keysButton.addEventListener('click', showShortcuts);
+
   addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && document.body.classList.contains('zen')) setZen(false);
+    if (e.key === 'Escape' && document.body.classList.contains('zen')) {
+      setZen(false);
+      return;
+    }
+    if (e.ctrlKey || e.metaKey || e.altKey || e.defaultPrevented) return;
+    const t = e.target as HTMLElement | null;
+    if (t && (t.isContentEditable || t.tagName === 'TEXTAREA' || (t.tagName === 'INPUT' && (t as HTMLInputElement).type === 'text'))) return;
+    if (document.querySelector('dialog[open]')) return;
+    const k = e.key.toLowerCase();
+    if (k === 'r') random.click();
+    else if (k === 'h') setZen(!document.body.classList.contains('zen'));
+    else if (k === 's') save.click();
+    else if (k === 'l') share.click();
+    else if (k === 't') setTour(!touring);
+    else if (e.key === '?') showShortcuts();
+    else if (/^[1-9]$/.test(e.key) && PRESETS[Number(e.key) - 1]) {
+      const preset = PRESETS[Number(e.key) - 1];
+      app.apply(preset.setup);
+      announce(`${preset.name} preset on`);
+    } else return;
+    e.preventDefault();
   });
 
   // My mixes: setups saved in this browser only.
@@ -239,6 +334,7 @@ export function buildPanel(opts: PanelOptions): Panel {
       presetRow,
       el('div', { class: 'actions' }, share, save),
       el('div', { class: 'actions' }, allOff, hide),
+      el('div', { class: 'actions' }, tour),
       pilotRow,
     ),
     el(
@@ -258,6 +354,7 @@ export function buildPanel(opts: PanelOptions): Panel {
     for (const fx of list) group.append(effectCard(fx));
     body.append(group);
   }
+  body.append(el('div', { class: 'panel-foot' }, keysButton));
 
   function effectCard(fx: Effect): HTMLElement {
     const st = app.get(fx);
@@ -347,7 +444,7 @@ export function buildPanel(opts: PanelOptions): Panel {
       if (await copyText(code)) flash(copy, 'Code copied!');
       else showManualCopy(`Code for ${fx.name}`, code);
     });
-    settings.append(copy);
+    if (fx.snippet !== false) settings.append(copy);
 
     sw.addEventListener('change', () => app.setOn(fx, sw.checked));
 

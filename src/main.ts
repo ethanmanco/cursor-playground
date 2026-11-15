@@ -62,9 +62,14 @@ const panel = buildPanel({
   shareLink,
   savePicture: () => savePicture([$<HTMLCanvasElement>('sky'), $<HTMLCanvasElement>('back'), $<HTMLCanvasElement>('front')]),
   autopilot: pilotPref,
+  onTour(on) {
+    touring = on;
+    if (on) pilot.kick();
+  },
 });
 
-startAutopilot({ stage: $('stage'), allowed: () => pilotOn && app.onCount() > 0 });
+let touring = false;
+const pilot = startAutopilot({ stage: $('stage'), allowed: () => (pilotOn || touring) && app.onCount() > 0 });
 
 /**
  * Load a setup. People who prefer reduced motion get the values loaded but

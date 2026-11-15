@@ -16,6 +16,8 @@ export interface AutopilotOptions {
 
 export interface Autopilot {
   readonly active: boolean;
+  /** Start right away (within a second) instead of waiting for idle time. */
+  kick(): void;
 }
 
 export function startAutopilot(opts: AutopilotOptions): Autopilot {
@@ -105,6 +107,9 @@ export function startAutopilot(opts: AutopilotOptions): Autopilot {
   return {
     get active() {
       return active;
+    },
+    kick() {
+      lastReal = -Infinity;
     },
   };
 }
