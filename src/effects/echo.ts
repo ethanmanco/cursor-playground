@@ -1,4 +1,5 @@
 import type { Effect } from '../engine/types';
+import { arrowPath } from './lib/arrow';
 
 type S = { copies: number; delay: number; spin: number };
 
@@ -12,19 +13,6 @@ function sample(at: number): { x: number; y: number } | null {
     if (history[i].t <= at) return history[i];
   }
   return history[0] ?? null;
-}
-
-function arrow(ctx: CanvasRenderingContext2D, x: number, y: number, size: number) {
-  const k = size / 20;
-  ctx.beginPath();
-  ctx.moveTo(x, y);
-  ctx.lineTo(x, y + 19 * k);
-  ctx.lineTo(x + 5 * k, y + 14 * k);
-  ctx.lineTo(x + 9 * k, y + 22 * k);
-  ctx.lineTo(x + 12.5 * k, y + 20.5 * k);
-  ctx.lineTo(x + 8.5 * k, y + 12.8 * k);
-  ctx.lineTo(x + 15.5 * k, y + 12.8 * k);
-  ctx.closePath();
 }
 
 export const echo: Effect<S> = {
@@ -72,7 +60,7 @@ export const echo: Effect<S> = {
       const k = i / n;
       ctx.globalAlpha = 0.85 - k * 0.6;
       ctx.fillStyle = `hsl(${(env.time * 60 + i * (300 / n)) % 360},100%,62%)`;
-      arrow(ctx, x, y, 22 - k * 6);
+      arrowPath(ctx, x, y, 22 - k * 6);
       ctx.fill();
       ctx.strokeStyle = 'rgba(5,6,15,0.6)';
       ctx.lineWidth = 1;

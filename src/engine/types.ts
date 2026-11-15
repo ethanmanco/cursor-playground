@@ -110,6 +110,12 @@ export interface Env {
   blast(b: Blast): void;
   /** Mark a moment that may play a sound (if sound is on). x is the screen position, for stereo. */
   cue(name: Cue, x?: number, strength?: number): void;
+  /**
+   * Pretend there was a click at (x, y): every other effect's onPointerDown
+   * runs as if the pointer were there. `from` is skipped, so an effect that
+   * replays clicks does not hear its own.
+   */
+  ghostClick(x: number, y: number, from: string): void;
 }
 
 export interface Effect<S extends Values = Values> {

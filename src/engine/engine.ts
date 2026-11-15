@@ -56,6 +56,15 @@ export class Engine {
         if (this.nextBlasts.length < 64) this.nextBlasts.push(b);
       },
       cue: (name, x, strength) => this.onCue?.(name, x ?? this.env.width / 2, strength ?? 1),
+      ghostClick: (x, y, from) => {
+        const p = this.env.pointer;
+        const saved = { x: p.x, y: p.y, inside: p.inside };
+        p.x = x;
+        p.y = y;
+        p.inside = true;
+        for (const a of this.active) if (a.effect.id !== from) a.effect.onPointerDown?.(this.env, a.values);
+        Object.assign(p, saved);
+      },
     };
     this.tiltTick = trackTilt(this.env.tilt);
     this.resize();
