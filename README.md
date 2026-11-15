@@ -12,7 +12,7 @@ A small interactive toy set in deep space. Pick effects from the panel, mix seve
 
 It works with a mouse, a finger, or a pen.
 
-## The 17 effects
+## The 23 effects
 
 | Category | Effect | What it does |
 | --- | --- | --- |
@@ -24,6 +24,12 @@ It works with a mouse, a finger, or a pen.
 | Followers | Boids flock | A flock of tiny ships follows you; press to scatter them |
 | Drawing | Fading ink | A brush-pen line that thins when you move fast, then fades |
 | Drawing | Rainbow paint | Paint with a brush that cycles through the rainbow |
+| Psychedelic | Color trip | Slowly rolls every color on screen around the rainbow |
+| Psychedelic | Kaleidoscope | Draw, and your lines bloom into a turning mirror pattern |
+| Psychedelic | Lava lamp | Glowing goo blobs drift, melt together, and follow you |
+| Psychedelic | Hypno spiral | Rainbow spiral arms turn slowly around your cursor |
+| Psychedelic | Moire rings | Two sets of rings overlap into wobbly op art patterns |
+| Psychedelic | Echo cursors | Rainbow ghost cursors replay your moves a beat behind |
 | Background | Starfield warp | Fly through space toward your cursor; move fast to boost |
 | Background | Parallax drift | Layers of space dust drift by and shift as you move |
 | Background | Ripple grid | A field of dots bends away from you; clicks send a ripple |
@@ -34,7 +40,7 @@ It works with a mouse, a finger, or a pen.
 | Click | Confetti pop | Click or tap to throw a handful of fluttering confetti |
 | Click | Shockwave | Click or tap to send a glowing ring rushing outward |
 
-There are also 7 presets and a **Randomize** button.
+There are also 10 presets and a **Randomize** button.
 
 More to play with:
 
@@ -70,6 +76,7 @@ Pushing to `main` deploys to GitHub Pages through `.github/workflows/deploy.yml`
 - The panel uses real labels, switches, and buttons, works fully from the keyboard, and shows a clear focus ring.
 - On phones the panel becomes a bottom sheet that starts closed.
 - Copied scripts also stay off for visitors who prefer reduced motion.
+- Nothing flashes. The psychedelic effects shift hue and move smoothly, but never strobe or flicker in brightness, so they stay clear of the photosensitivity limits in WCAG 2.3.
 
 ## Add a new effect
 
@@ -118,9 +125,6 @@ Not in this version:
 - More effects:
   - Magnetic buttons
   - Magnifier lens
-  - Liquid blob cursor
-  - Kaleidoscope
-  - Ghost cursors
 
 ## Credits
 
