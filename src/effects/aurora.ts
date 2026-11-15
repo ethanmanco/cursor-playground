@@ -1,18 +1,72 @@
 import type { Effect } from '../engine/types';
-import { hexToRgb } from './lib/color';
+import { createShaderPass, NOISE_GLSL, rgb01, type ShaderPass } from './lib/gl';
 
 type S = { color: string; height: number; speed: number };
 
-// Northern lights. Curtains of light ripple slowly across the sky, and the
-// curtain nearest your cursor bends toward it and brightens. Drawn small and
-// stretched up smoothly, which gives the soft glow for free and keeps it fast.
+// Northern lights, drawn by a WebGL shader. Three curtains of light hang
+// across the sky. Soft noise folds them, fine streaks run up them like real
+// aurora rays, and the curtain nearest your cursor leans toward it and glows
+// brighter. Without WebGL it falls back to soft glowing bands.
 
-let scratch: HTMLCanvasElement | null = null;
-let px = 0.5;
-let py = 0.5;
+const FRAG = `
+precision highp float;
+uniform vec2 uRes;
+uniform float uTime;
+uniform vec3 uColor;
+uniform vec3 uTop;
+uniform vec2 uMouse;
+uniform float uNear;
+uniform float uHeight;
+${NOISE_GLSL}
+
+void main() {
+  vec2 uv = gl_FragCoord.xy / uRes;
+  float aspect = uRes.x / uRes.y;
+  float x = uv.x * aspect;
+  vec3 col = vec3(0.0);
+
+  for (int i = 0; i < 3; i++) {
+    float c = float(i);
+    float t = uTime * (1.0 + c * 0.25);
+    // Where the bottom edge of this curtain sits, gently folding.
+    float fold = fbm(vec2(x * 0.7 + t * 0.04 + c * 3.1, t * 0.02 + c));
+    float base = 0.42 + c * 0.1 + (fold - 0.5) * 0.4;
+    // Lean toward the cursor.
+    float pull = exp(-pow((uv.x - uMouse.x) * aspect, 2.0) / 0.06) * uNear;
+    base = mix(base, uMouse.y - 0.04, pull * 0.3);
+
+    float height = uHeight * (0.55 + 0.7 * fbm(vec2(x * 1.3 - t * 0.03, c * 5.0)));
+    float d = uv.y - base;
+    // Crisp-ish bottom edge, long soft fade upward.
+    float shape = smoothstep(-0.035, 0.012, d) * exp(-max(d, 0.0) / height * 2.4);
+    // Rays: thin vertical streaks that drift sideways.
+    float rays = fbm(vec2(x * 22.0 + t * 0.12 + c * 11.0, uv.y * 0.8 - t * 0.05));
+    rays = 0.35 + 0.65 * smoothstep(0.25, 0.75, rays);
+
+    float glow = shape * rays * (0.85 + pull * 0.9) * (1.0 - c * 0.2);
+    vec3 tint = mix(uColor, uTop, smoothstep(0.0, height * 1.2, d));
+    col += tint * glow * 1.05;
+  }
+
+  // Tiny noise breaks up any banding in the smooth glow.
+  col += (hash(gl_FragCoord.xy + uTime) - 0.5) / 255.0;
+  col = max(col, 0.0);
+  float alpha = clamp(max(col.r, max(col.g, col.b)), 0.0, 1.0);
+  gl_FragColor = vec4(min(col, vec3(1.0)), alpha);
+}
+`;
+
+let pass: ShaderPass | null = null;
+let tried = false;
+let mx = 0.5;
+let my = 0.5;
 let near = 0;
 
-const SCALE = 6; // draw small, then stretch up smoothly for a soft glow
+/** A cooler, violet tint for the tops of the curtains. */
+function topTint(color: [number, number, number]): [number, number, number] {
+  const [r, g, b] = color;
+  return [Math.min(1, r * 0.4 + 0.45), Math.min(1, g * 0.25 + 0.15), Math.min(1, b * 0.5 + 0.7)];
+}
 
 export const aurora: Effect<S> = {
   id: 'aurora',
@@ -28,70 +82,53 @@ export const aurora: Effect<S> = {
 
   setup() {
     near = 0;
+    if (!tried) {
+      tried = true;
+      pass = createShaderPass(FRAG);
+    }
   },
 
   update(dt, env) {
     const p = env.pointer;
     const ease = Math.min(1, dt * 3);
-    px += (p.x / env.width - px) * ease;
-    py += (p.y / env.height - py) * ease;
+    mx += (p.x / env.width - mx) * ease;
+    my += (1 - p.y / env.height - my) * ease;
     near += ((p.inside ? 1 : 0) - near) * Math.min(1, dt * 2);
   },
 
   draw(env, s) {
-    const w = Math.ceil(env.width / SCALE);
-    const h = Math.ceil(env.height / SCALE);
-    scratch ??= document.createElement('canvas');
-    if (scratch.width !== w || scratch.height !== h) {
-      scratch.width = w;
-      scratch.height = h;
-    }
-    const g = scratch.getContext('2d')!;
-    g.globalCompositeOperation = 'source-over';
-    g.clearRect(0, 0, w, h);
-    g.globalCompositeOperation = 'lighter';
-
-    const [r, gr, b] = hexToRgb(s.color);
-    // A second, cooler tint for the tops of the curtains.
-    const top = `rgba(${Math.round(r * 0.5 + 60)},${Math.round(gr * 0.4 + 40)},${Math.min(255, b + 140)},`;
-    const base = `rgba(${r},${gr},${b},`;
-    const t = env.time * s.speed * 0.12;
-    const reach = (s.height / 100) * h;
-    const curtains = 3;
-
-    for (let c = 0; c < curtains; c++) {
-      const baseY = h * (0.38 + c * 0.12);
-      const grad = g.createLinearGradient(0, baseY - reach, 0, baseY + 6);
-      grad.addColorStop(0, top + '0)');
-      grad.addColorStop(0.55, top + '0.35)');
-      grad.addColorStop(0.9, base + '0.75)');
-      grad.addColorStop(1, base + '0)');
-      g.fillStyle = grad;
-      for (let x = 0; x < w; x++) {
-        const u = x / w;
-        // Layered slow waves give the curtain its folds.
-        const wave =
-          Math.sin(u * 6 + t * (1 + c * 0.3) + c * 2) * 0.5 +
-          Math.sin(u * 13 - t * 1.7 + c) * 0.25 +
-          Math.sin(u * 29 + t * 2.3) * 0.12;
-        // Lean toward the cursor.
-        const pull = Math.exp(-((u - px) ** 2) / 0.02) * near;
-        const y = baseY + wave * h * 0.06 + (py * h - baseY) * pull * 0.35;
-        // The curtain height changes slowly so its top edge stays smooth.
-        // Fine rays only change brightness, which gives soft vertical streaks.
-        const swell = 0.5 + 0.5 * Math.sin(u * 5 - t * 0.8 + c * 3);
-        const len = reach * (0.65 + 0.35 * swell) * (1 + pull * 0.4);
-        const ray = 0.6 + 0.4 * Math.sin(u * 70 + t * 2 + c * 5) * Math.sin(u * 23 - t * 1.3);
-        g.globalAlpha = (0.3 + 0.7 * ray) * (0.75 + pull * 0.5) * (1 - c * 0.2);
-        g.fillRect(x, y - len, 1, len + 6);
-      }
-    }
-
     const ctx = env.back;
+    const color = rgb01(s.color);
+    if (!pass) {
+      // Fallback: three soft glowing bands.
+      ctx.globalCompositeOperation = 'lighter';
+      for (let c = 0; c < 3; c++) {
+        const y = env.height * (0.58 - c * 0.1);
+        const g = ctx.createLinearGradient(0, y - env.height * (s.height / 100) * 0.5, 0, y);
+        g.addColorStop(0, 'rgba(0,0,0,0)');
+        g.addColorStop(1, s.color);
+        ctx.globalAlpha = 0.25 - c * 0.05;
+        ctx.fillStyle = g;
+        ctx.fillRect(0, y - env.height * (s.height / 100) * 0.5, env.width, env.height * (s.height / 100) * 0.5);
+      }
+      return;
+    }
+    // Rendered at a bit under full size: the glow is soft, rays stay sharp.
+    const scale = Math.min(env.dpr, 1) * 0.75;
+    const top = topTint(color);
+    pass.render(env.width * scale, env.height * scale, (gl) => {
+      gl.uniform2f(pass!.uniform('uRes'), pass!.canvas.width, pass!.canvas.height);
+      gl.uniform1f(pass!.uniform('uTime'), env.time * s.speed * 0.35);
+      gl.uniform3f(pass!.uniform('uColor'), color[0], color[1], color[2]);
+      gl.uniform3f(pass!.uniform('uTop'), top[0], top[1], top[2]);
+      gl.uniform2f(pass!.uniform('uMouse'), mx, my);
+      gl.uniform1f(pass!.uniform('uNear'), near);
+      gl.uniform1f(pass!.uniform('uHeight'), (s.height / 100) * 0.55);
+    });
     ctx.globalCompositeOperation = 'lighter';
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
-    ctx.drawImage(scratch, 0, 0, w * SCALE, h * SCALE);
+    ctx.drawImage(pass.canvas, 0, 0, env.width, env.height);
   },
 
   teardown() {},
