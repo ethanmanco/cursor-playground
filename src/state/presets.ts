@@ -75,11 +75,19 @@ export const PRESETS: Preset[] = [
     },
   },
   {
-    name: 'Kaleido dream',
+    name: 'Northern lights',
     setup: {
-      spiral: { arms: 6, twist: 4, speed: 2 },
-      kaleido: { slices: 8, size: 7, fade: 6 },
-      cursor: { shape: 'orb', color: '#ffffff', size: 18 },
+      aurora: { color: '#4dffb0', height: 55, speed: 3 },
+      fireflies: { color: '#d8ff6b', count: 35, trust: 7 },
+      cursor: { shape: 'orb', color: '#d8ff6b', size: 16 },
+    },
+  },
+  {
+    name: 'Bubble pop',
+    setup: {
+      lava: { blobs: 6, size: 80, speed: 3 },
+      bubbles: { size: 30, amount: 6, tint: 7 },
+      orbit: { color: '#9ec5ff', moons: 3, speed: 4 },
     },
   },
   {

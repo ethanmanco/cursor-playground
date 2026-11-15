@@ -2,22 +2,24 @@ import type { Effect } from '../engine/types';
 import { trip } from './trip';
 import { lava } from './lava';
 import { moire } from './moire';
-import { spiral } from './spiral';
+import { aurora } from './aurora';
 import { warp } from './warp';
 import { parallax } from './parallax';
 import { constellation } from './constellation';
 import { dotGrid } from './dotgrid';
 import { watchingEyes } from './eyes';
 import { flashlight } from './flashlight';
-import { kaleido } from './kaleido';
 import { ink } from './ink';
 import { paint } from './paint';
 import { gravity } from './gravity';
 import { boids } from './boids';
+import { fireflies } from './fireflies';
+import { orbit } from './orbit';
 import { ribbon } from './ribbon';
 import { comet } from './comet';
 import { trail } from './trail';
 import { echo } from './echo';
+import { soapBubbles } from './bubbles';
 import { confetti } from './confetti';
 import { fireworks } from './fireworks';
 import { shockwave } from './shockwave';
@@ -34,22 +36,24 @@ export const EFFECTS: Effect[] = [
   trip,
   lava,
   moire,
-  spiral,
+  aurora,
   warp,
   parallax,
   constellation,
   dotGrid,
   watchingEyes,
   flashlight,
-  kaleido,
   ink,
   paint,
   gravity,
   ribbon,
   boids,
+  fireflies,
+  orbit,
   comet,
   trail,
   echo,
+  soapBubbles,
   confetti,
   fireworks,
   shockwave,
