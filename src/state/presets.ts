@@ -36,6 +36,7 @@ export const PRESETS: Preset[] = [
     setup: {
       eyes: { color: '#8affc1', count: 10, size: 44 },
       flashlight: { radius: 170, dark: 90, color: '#8affc1' },
+      cursor: { shape: 'ufo', color: '#8affc1', size: 24 },
       trail: { color: '#8affc1', size: 8, amount: 3 },
     },
   },
@@ -44,7 +45,7 @@ export const PRESETS: Preset[] = [
     setup: {
       constellation: { color: '#b28cff', count: 50, reach: 160 },
       ribbon: { color: '#ff7ad9', length: 44, width: 18 },
-      repel: { radius: 180, strength: 7, bounce: 6 },
+      shockwave: { color: '#ff7ad9', size: 240, speed: 6 },
     },
   },
   {
@@ -53,6 +54,7 @@ export const PRESETS: Preset[] = [
       warp: { color: '#cfe3ff', speed: 5, count: 240 },
       boids: { color: '#6ee7ff', count: 45, speed: 6 },
       shockwave: { color: '#b28cff', size: 300, speed: 5 },
+      cursor: { shape: 'rocket', color: '#ffd166', size: 24 },
     },
   },
   {
@@ -61,6 +63,7 @@ export const PRESETS: Preset[] = [
       gravity: { color: '#ff7ad9', pull: 5, count: 160 },
       confetti: { amount: 100, power: 6, size: 10 },
       fireworks: { color: '#ffd166', sparks: 80, power: 5 },
+      cursor: { shape: 'star', color: '#ffd166', size: 22 },
     },
   },
 ];
@@ -97,7 +100,11 @@ export function randomSetup(effects: Effect[]): Setup {
     const values: Record<string, number | string> = {};
     for (const def of fx.settings) {
       values[def.key] =
-        def.kind === 'color' ? randomColor() : cleanValue(def, def.min + Math.random() * (def.max - def.min));
+        def.kind === 'color'
+          ? randomColor()
+          : def.kind === 'choice'
+            ? def.options[Math.floor(Math.random() * def.options.length)].value
+            : cleanValue(def, def.min + Math.random() * (def.max - def.min));
     }
     setup[fx.id] = values;
   }

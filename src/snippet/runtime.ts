@@ -1,5 +1,4 @@
 import { Engine } from '../engine/engine';
-import { splitHeading } from '../engine/split';
 import type { Effect, Values } from '../engine/types';
 
 /**
@@ -20,14 +19,10 @@ export function runSnippet(effect: Effect, values: Values): void {
     });
     document.body.append(canvas);
 
-    const heading = (document.querySelector('[data-repel]') ?? document.querySelector('h1') ?? document.body) as HTMLElement;
-    if (effect.id === 'repel') splitHeading(heading);
-
     const engine = new Engine({
       stage: document.documentElement,
       back: canvas,
       front: canvas,
-      heading,
       registry: [effect],
     });
     engine.enable(effect, values);

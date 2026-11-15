@@ -12,6 +12,10 @@ function decimals(step: number): number {
 
 /** Force any value into a safe one for this setting (range, step, or hex color). */
 export function cleanValue(def: SettingDef, raw: unknown): number | string {
+  if (def.kind === 'choice') {
+    const s = String(raw ?? '');
+    return def.options.some((o) => o.value === s) ? s : def.default;
+  }
   if (def.kind === 'color') {
     const s = String(raw ?? '').trim().replace(/^#/, '');
     return /^[0-9a-f]{6}$/i.test(s) ? `#${s.toLowerCase()}` : def.default;

@@ -12,7 +12,6 @@ export interface EngineOptions {
   stage: HTMLElement;
   back: HTMLCanvasElement;
   front: HTMLCanvasElement;
-  heading: HTMLElement;
   /** Registry order decides draw order. */
   registry: Effect[];
 }
@@ -45,7 +44,6 @@ export class Engine {
       pointer: this.tracker.pointer,
       time: 0,
       budget: createBudget(defaultCap()),
-      heading: opts.heading,
     };
     this.resize();
     addEventListener('resize', () => this.resize());

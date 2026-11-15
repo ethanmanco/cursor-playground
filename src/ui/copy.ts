@@ -3,7 +3,7 @@ import type { Effect, Values } from '../engine/types';
 export const SITE_URL = 'https://ethanmanco.github.io/cursor-playground/';
 
 const NOTES: Record<string, string> = {
-  repel: ' * It moves the letters of the heading marked data-repel, or your first <h1>.\n',
+  cursor: ' * It hides the normal cursor on your page and draws this one instead.\n',
 };
 
 /** A standalone script for one effect, with the current settings filled in. */
@@ -30,6 +30,7 @@ export async function snippetFor(fx: Effect, values: Values): Promise<string> {
 export function showManualCopy(title: string, text: string): void {
   const dialog = document.createElement('dialog');
   dialog.className = 'copy-dialog';
+  dialog.setAttribute('data-cp-keep-cursor', '');
   dialog.setAttribute('aria-labelledby', 'copy-dialog-title');
   const heading = document.createElement('h2');
   heading.id = 'copy-dialog-title';

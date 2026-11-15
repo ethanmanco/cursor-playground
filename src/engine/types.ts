@@ -1,9 +1,10 @@
 // The shared contract every effect follows. Add an effect by writing one file
 // that exports an `Effect` and listing it in src/effects/index.ts.
 
-export type Category = 'followers' | 'drawing' | 'background' | 'lighting' | 'physics' | 'click';
+export type Category = 'cursor' | 'followers' | 'drawing' | 'background' | 'lighting' | 'physics' | 'click';
 
 export const CATEGORY_LABELS: Record<Category, string> = {
+  cursor: 'Your cursor',
   followers: 'Followers',
   drawing: 'Drawing',
   background: 'Background',
@@ -12,7 +13,7 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   click: 'Click',
 };
 
-export const CATEGORY_ORDER: Category[] = ['followers', 'drawing', 'background', 'lighting', 'physics', 'click'];
+export const CATEGORY_ORDER: Category[] = ['cursor', 'followers', 'drawing', 'background', 'lighting', 'physics', 'click'];
 
 export interface RangeSetting {
   kind: 'range';
@@ -33,7 +34,16 @@ export interface ColorSetting {
   default: string;
 }
 
-export type SettingDef = RangeSetting | ColorSetting;
+export interface ChoiceSetting {
+  kind: 'choice';
+  key: string;
+  label: string;
+  /** Values must be short lowercase letters and digits, since they go in share links. */
+  options: { value: string; label: string }[];
+  default: string;
+}
+
+export type SettingDef = RangeSetting | ColorSetting | ChoiceSetting;
 
 export type Values = Record<string, number | string>;
 
@@ -73,8 +83,6 @@ export interface Env {
   /** Seconds since the engine started. */
   time: number;
   budget: Budget;
-  /** The page heading. Only DOM effects (like repel) touch it. */
-  heading: HTMLElement;
 }
 
 export interface Effect<S extends Values = Values> {

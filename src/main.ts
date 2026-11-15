@@ -1,11 +1,12 @@
 import './style.css';
 import { Engine } from './engine/engine';
-import { splitHeading } from './engine/split';
 import { EFFECTS } from './effects';
 import { App } from './state/app';
 import { decodeSetup, encodeSetup, type Setup } from './state/setup';
 import { buildPanel } from './ui/panel';
+import { startAutopilot } from './ui/autopilot';
 import { paintSky } from './ui/sky';
+import { savePicture } from './ui/snapshot';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 
@@ -14,15 +15,12 @@ const reducedMotion =
   matchMedia('(prefers-reduced-motion: reduce)').matches ||
   (import.meta.env.DEV && new URLSearchParams(location.search).has('reduce'));
 
-const heading = $('heading');
-splitHeading(heading);
 paintSky($<HTMLCanvasElement>('sky'));
 
 const engine = new Engine({
   stage: $('stage'),
   back: $<HTMLCanvasElement>('back'),
   front: $<HTMLCanvasElement>('front'),
-  heading,
   registry: EFFECTS,
 });
 const app = new App(engine, EFFECTS);
@@ -35,7 +33,38 @@ const STARTER: Setup = { trail: {}, fireworks: {} };
 const shareHash = () => '#' + encodeSetup(app.current(), EFFECTS);
 const shareLink = () => location.origin + location.pathname + shareHash();
 
-const panel = buildPanel({ root: $('panel'), app, reducedMotion, shareLink });
+// Autopilot is a per-browser preference, so it lives in localStorage.
+const PILOT_KEY = 'cursor-playground:autopilot';
+const pilotPref = {
+  get(): boolean {
+    try {
+      const v = localStorage.getItem(PILOT_KEY);
+      return v === null ? !reducedMotion : v === '1';
+    } catch {
+      return !reducedMotion;
+    }
+  },
+  set(on: boolean) {
+    try {
+      localStorage.setItem(PILOT_KEY, on ? '1' : '0');
+    } catch {
+      // Storage blocked: the switch still works for this visit.
+    }
+    pilotOn = on;
+  },
+};
+let pilotOn = pilotPref.get();
+
+const panel = buildPanel({
+  root: $('panel'),
+  app,
+  reducedMotion,
+  shareLink,
+  savePicture: () => savePicture([$<HTMLCanvasElement>('sky'), $<HTMLCanvasElement>('back'), $<HTMLCanvasElement>('front')]),
+  autopilot: pilotPref,
+});
+
+startAutopilot({ stage: $('stage'), allowed: () => pilotOn && app.onCount() > 0 });
 
 /**
  * Load a setup. People who prefer reduced motion get the values loaded but
@@ -68,19 +97,9 @@ app.onChange((kind) => {
   urlTimer = window.setTimeout(() => history.replaceState(null, '', shareHash()), 250);
 });
 
-// The title greets people, then fades so it stays out of the way. It comes
-// back while the repel field is on, since that effect plays with its letters.
-const hero = document.querySelector<HTMLElement>('.hero')!;
+// The title greets people, then fades so it stays out of the way.
 const TITLE_SECONDS = 3;
-let introOver = false;
-const syncTitle = () => hero.classList.toggle('is-faded', introOver && !app.state.get('repel')?.on);
-window.setTimeout(() => {
-  introOver = true;
-  syncTitle();
-}, TITLE_SECONDS * 1000);
-app.onChange((kind) => {
-  if (kind === 'structure') syncTitle();
-});
+window.setTimeout(() => document.querySelector('.hero')?.classList.add('is-faded'), TITLE_SECONDS * 1000);
 
 // A share link pasted into this same tab only changes the hash.
 addEventListener('hashchange', () => {

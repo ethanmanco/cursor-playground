@@ -30,8 +30,11 @@ describe('effect registry', () => {
     }
   });
 
-  it('keeps ids free of the characters the link format uses', () => {
-    for (const fx of EFFECTS) expect(fx.id).toMatch(/^[a-z0-9]+$/);
+  it('keeps ids and choice values free of the characters the link format uses', () => {
+    for (const fx of EFFECTS) {
+      expect(fx.id).toMatch(/^[a-z0-9]+$/);
+      for (const def of fx.settings) if (def.kind === 'choice') for (const o of def.options) expect(o.value).toMatch(/^[a-z0-9]+$/);
+    }
   });
 });
 
@@ -53,6 +56,14 @@ describe('cleanValue', () => {
     expect(cleanValue(size, undefined)).toBe(14);
     expect(cleanValue(color, 'red')).toBe('#6ee7ff');
     expect(cleanValue(color, '<script>')).toBe('#6ee7ff');
+  });
+
+  it('only accepts listed choices', () => {
+    const shape = byId('cursor').settings.find((s) => s.key === 'shape')!;
+    expect(cleanValue(shape, 'ufo')).toBe('ufo');
+    expect(cleanValue(shape, 'UFO')).toBe('rocket');
+    expect(cleanValue(shape, 'banana')).toBe('rocket');
+    expect(decodeSetup('#v1~cursor_star_ff0000_30', EFFECTS)).toEqual({ cursor: { shape: 'star', color: '#ff0000', size: 30 } });
   });
 
   it('normalizes colors', () => {

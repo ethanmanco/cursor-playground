@@ -10,6 +10,10 @@ export interface PanelOptions {
   reducedMotion: boolean;
   /** Returns the full share link for the current setup. */
   shareLink(): string;
+  /** Saves a PNG of the scene. Resolves false if it could not. */
+  savePicture(): Promise<boolean>;
+  /** Whether autopilot may run when the page sits idle. */
+  autopilot: { get(): boolean; set(on: boolean): void };
 }
 
 export interface Panel {
@@ -120,6 +124,26 @@ export function buildPanel(opts: PanelOptions): Panel {
     if (await copyText(link)) flash(share, 'Link copied!');
     else showManualCopy('Your share link', link);
   });
+  const save = el('button', { type: 'button', class: 'action' }, 'Save picture');
+  save.addEventListener('click', async () => {
+    flash(save, (await opts.savePicture()) ? 'Saved!' : 'Could not save');
+  });
+
+  const pilot = el('input', { type: 'checkbox', role: 'switch', id: 'autopilot', class: 'switch' });
+  pilot.checked = opts.autopilot.get();
+  pilot.addEventListener('change', () => opts.autopilot.set(pilot.checked));
+  const pilotRow = el(
+    'div',
+    { class: 'option-row' },
+    el(
+      'label',
+      { for: 'autopilot', class: 'fx-label' },
+      el('span', { class: 'fx-name' }, 'Autopilot'),
+      el('span', { class: 'fx-blurb' }, 'When nobody moves for a few seconds, a ghost cursor plays.'),
+    ),
+    pilot,
+  );
+
   const allOff = el('button', { type: 'button', class: 'action' }, 'Turn all off');
   allOff.addEventListener('click', () => {
     app.apply({});
@@ -132,7 +156,9 @@ export function buildPanel(opts: PanelOptions): Panel {
       { class: 'quick', 'aria-labelledby': 'presets-title' },
       el('h2', { id: 'presets-title', class: 'section-title' }, 'Try a preset'),
       presetRow,
-      el('div', { class: 'actions' }, share, allOff),
+      el('div', { class: 'actions' }, share, save),
+      el('div', { class: 'actions' }, allOff),
+      pilotRow,
     ),
   );
 
@@ -177,6 +203,24 @@ export function buildPanel(opts: PanelOptions): Panel {
 
     for (const def of fx.settings) {
       const id = `${switchId}-${def.key}`;
+      if (def.kind === 'choice') {
+        // A row of chips backed by real radio buttons (arrow keys work).
+        const row = el('div', { class: 'choice-row' });
+        const radios = def.options.map((o) => {
+          const rid = `${id}-${o.value}`;
+          const radio = el('input', { type: 'radio', name: id, id: rid, value: o.value, class: 'choice-input' });
+          radio.addEventListener('change', () => {
+            if (radio.checked) app.setValue(fx, def.key, o.value);
+          });
+          row.append(radio, el('label', { for: rid, class: 'choice-chip' }, o.label));
+          return radio;
+        });
+        settings.append(el('fieldset', { class: 'setting setting-choice' }, el('legend', {}, def.label), row));
+        syncers.push(() => {
+          for (const r of radios) r.checked = r.value === st.values[def.key];
+        });
+        continue;
+      }
       const out = el('output', { for: id, class: 'value' });
       const input =
         def.kind === 'range'

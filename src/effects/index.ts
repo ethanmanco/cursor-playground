@@ -15,7 +15,7 @@ import { trail } from './trail';
 import { confetti } from './confetti';
 import { fireworks } from './fireworks';
 import { shockwave } from './shockwave';
-import { repel } from './repel';
+import { customCursor } from './cursor';
 
 /**
  * Every effect, in draw order (earlier draws underneath). The panel groups
@@ -41,5 +41,5 @@ export const EFFECTS: Effect[] = [
   confetti,
   fireworks,
   shockwave,
-  repel,
+  customCursor,
 ];
