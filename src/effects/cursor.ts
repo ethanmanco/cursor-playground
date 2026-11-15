@@ -42,7 +42,7 @@ function star(ctx: CanvasRenderingContext2D, r: number) {
 export const customCursor: Effect<S> = {
   id: 'cursor',
   name: 'Custom cursor',
-  blurb: 'Swap the arrow for an orb, a ring, a rocket, a UFO, or a star.',
+  blurb: 'Swap the arrow for a rocket, UFO, orb, ring, star, planet, or heart.',
   category: 'cursor',
   layer: 'front',
   settings: [
@@ -56,6 +56,8 @@ export const customCursor: Effect<S> = {
         { value: 'orb', label: 'Orb' },
         { value: 'ring', label: 'Ring' },
         { value: 'star', label: 'Star' },
+        { value: 'planet', label: 'Planet' },
+        { value: 'heart', label: 'Heart' },
       ],
       default: 'rocket',
     },
@@ -169,6 +171,51 @@ export const customCursor: Effect<S> = {
         ctx.fill();
         ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = 1.5;
+        ctx.stroke();
+        break;
+      }
+      case 'planet': {
+        // A little ringed planet. The ring passes behind, then in front.
+        const r = size * 0.55;
+        ctx.translate(p.x, p.y);
+        ctx.rotate(-0.35);
+        const ring = (front: boolean) => {
+          ctx.strokeStyle = rgba(s.color, 0.9);
+          ctx.lineWidth = Math.max(1.5, size * 0.09);
+          ctx.beginPath();
+          ctx.ellipse(0, 0, r * 1.8, r * 0.5, 0, front ? 0 : Math.PI, front ? Math.PI : Math.PI * 2);
+          ctx.stroke();
+        };
+        ring(false);
+        const ball = ctx.createRadialGradient(-r * 0.35, -r * 0.35, r * 0.1, 0, 0, r);
+        ball.addColorStop(0, '#ffffff');
+        ball.addColorStop(0.35, `hsl(${hue},85%,70%)`);
+        ball.addColorStop(1, `hsl(${hue + 30},70%,35%)`);
+        ctx.fillStyle = ball;
+        ctx.beginPath();
+        ctx.arc(0, 0, r, 0, Math.PI * 2);
+        ctx.fill();
+        ring(true);
+        break;
+      }
+      case 'heart': {
+        // A gentle heartbeat, about once a second.
+        const beat = 1 + Math.max(0, Math.sin(env.time * 6.3)) ** 8 * 0.18;
+        const k = (size / 20) * beat;
+        ctx.translate(p.x, p.y);
+        ctx.scale(k, k);
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.drawImage(sprite, -22, -22, 44, 44);
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.beginPath();
+        ctx.moveTo(0, 7);
+        ctx.bezierCurveTo(-14, -2, -9, -14, 0, -7);
+        ctx.bezierCurveTo(9, -14, 14, -2, 0, 7);
+        ctx.closePath();
+        ctx.fillStyle = `hsl(${hue},95%,68%)`;
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.2;
         ctx.stroke();
         break;
       }
