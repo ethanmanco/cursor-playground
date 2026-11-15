@@ -12,7 +12,7 @@ A small interactive toy set in deep space. Pick effects from the panel, mix seve
 
 It works with a mouse, a finger, or a pen.
 
-## The 12 effects
+## The 17 effects
 
 | Category | Effect | What it does |
 | --- | --- | --- |
@@ -20,16 +20,21 @@ It works with a mouse, a finger, or a pen.
 | Followers | Glowing comet | A bright comet chases your cursor on a spring |
 | Followers | Ribbon snake | A wiggly space snake slithers after you |
 | Followers | Watching eyes | Eyes around the screen follow you, and sometimes blink |
+| Followers | Boids flock | A flock of tiny ships follows you; press to scatter them |
 | Drawing | Fading ink | A brush-pen line that thins when you move fast, then fades |
 | Drawing | Rainbow paint | Paint with a brush that cycles through the rainbow |
+| Background | Starfield warp | Fly through space toward your cursor; move fast to boost |
 | Background | Parallax drift | Layers of space dust drift by and shift as you move |
 | Background | Ripple grid | A field of dots bends away from you; clicks send a ripple |
 | Background | Constellations | Drifting stars link up and reach out to your cursor |
 | Lighting | Flashlight | Lights out; shine a beam to find a hidden star map |
 | Physics | Repel field | Brings back the title, then scatters its letters away from your cursor |
+| Physics | Gravity well | Your cursor pulls in drifting motes; hold down to push them away |
 | Click | Firework burst | Click or tap anywhere to set off a burst |
+| Click | Confetti pop | Click or tap to throw a handful of fluttering confetti |
+| Click | Shockwave | Click or tap to send a glowing ring rushing outward |
 
-There are also 5 presets and a **Randomize** button.
+There are also 7 presets and a **Randomize** button.
 
 ## Run it locally
 
@@ -104,16 +109,11 @@ Not in this version:
 - Uploading your own image for the flashlight to reveal
 - Sound
 - More effects:
-  - Boids (a flock that steers around the cursor)
-  - Starfield warp
   - Magnetic buttons
-  - Gravity well
   - Magnifier lens
   - Liquid blob cursor
   - Kaleidoscope
   - Ghost cursors
-  - Confetti
-  - Shockwave
 
 ## Credits
 
