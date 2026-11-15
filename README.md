@@ -12,25 +12,28 @@ A small interactive toy set in deep space. Pick effects from the panel, mix seve
 
 It works with a mouse, a finger, or a pen.
 
-## The 29 effects
+## The 32 effects
 
 | Category | Effect | What it does |
 | --- | --- | --- |
 | Scene | Sky theme | Change the backdrop: deep space, nebula, ocean, sunset, or void |
+| Your cursor | Soft halo | A gentle glow follows your cursor and slowly breathes |
 | Your cursor | Custom cursor | Swap the arrow for a rocket, UFO, orb, ring, star, planet, or heart |
 | Followers | Particle trail | Glowing sparks spill out behind your cursor |
 | Followers | Glowing comet | A bright comet chases your cursor on a spring |
 | Followers | Ribbon snake | A wiggly space snake slithers after you |
 | Followers | Watching eyes | Eyes around the screen follow you, and sometimes blink |
+| Followers | Pond ripples | Quiet ripples spread out behind your cursor, like a finger in water |
 | Followers | Fireflies | Hold still and fireflies gather around you; move fast to scatter them |
 | Followers | Orbiting moons | Little moons circle your cursor and trail along behind you |
 | Followers | Boids flock | A flock of tiny ships follows you; press to scatter them |
 | Drawing | Fading ink | A brush-pen line that thins when you move fast, then fades |
 | Drawing | Rainbow paint | Paint with a brush that cycles through the rainbow |
 | Psychedelic | Color trip | Slowly rolls every color on screen around the rainbow |
-| Psychedelic | Lava lamp | Glossy goo blobs drift, melt together, and follow you (WebGL) |
-| Psychedelic | Cosmic smoke | Colorful nebula gas drifts slowly and swirls around your cursor (WebGL) |
+| Psychedelic | Silk ribbons | Shimmering ribbons of light wave slowly and bend toward you |
+| Psychedelic | Cosmic dust | Faint glowing gas and dust drift among the stars and swirl around you (WebGL) |
 | Psychedelic | Echo cursors | Rainbow ghost cursors replay your moves a beat behind |
+| Background | Dandelion seeds | Seeds float on a soft breeze; move through them to stir up a gust |
 | Background | Aurora | Northern lights with real-looking rays ripple across the sky and lean toward you (WebGL) |
 | Background | Shooting stars | Shooting stars streak by; click to make a wish and start a shower |
 | Background | Starfield warp | Fly through space toward your cursor; move fast to boost |
@@ -38,7 +41,7 @@ It works with a mouse, a finger, or a pen.
 | Background | Ripple grid | A field of dots bends away from you; clicks send a ripple |
 | Background | Constellations | Drifting stars link up and reach out to your cursor |
 | Lighting | Flashlight | Lights out; explore a hidden star map where found stars stay lit and finished constellations draw in; click for a flare |
-| Physics | Magnetic field | Iron filings line up along the field of a magnet you carry |
+| Physics | Magnetic field | Iron filings line up around a small bar magnet that sits on your cursor |
 | Physics | Gravity well | Your cursor pulls in drifting motes; hold down to push them away |
 | Click | Firework burst | Click or tap anywhere to set off a burst |
 | Click | Soap bubbles | Press and hold to blow bubbles; touch them to pop them |
@@ -46,7 +49,7 @@ It works with a mouse, a finger, or a pen.
 | Click | Supernova | Double-click or double-tap: the background stars fall inward, then everything explodes and the stars fly home |
 | Click | Shockwave | Click or tap to send a glowing ring rushing outward |
 
-There are also 12 presets and a **Randomize** button.
+There are also 13 presets and a **Randomize** button.
 
 More to play with:
 
@@ -77,7 +80,7 @@ Pushing to `main` deploys to GitHub Pages through `.github/workflows/deploy.yml`
 
 ## How it works
 
-- **Vite + TypeScript**, drawn with **Canvas 2D**. No UI framework. Three effects use **WebGL** (lava lamp, aurora, cosmic smoke), because per-pixel shaders make their soft, glossy looks smooth and fast. A small helper in `src/effects/lib/gl.ts` sets up a full-screen shader. Without WebGL they fall back to simpler drawings, or stay hidden.
+- **Vite + TypeScript**, drawn with **Canvas 2D**. No UI framework. Two effects use **WebGL** (aurora and cosmic dust), because per-pixel shaders make their soft, glossy looks smooth and fast. A small helper in `src/effects/lib/gl.ts` sets up a full-screen shader. Without WebGL they fall back to simpler drawings, or stay hidden.
 - **One shared animation loop** runs every effect. It sleeps when nothing is on and pauses while the tab is hidden.
 - **Two canvas layers** sit behind and in front of the title, so background effects stay behind the text.
 - **A shared particle budget** (1500 on desktop, 500 on touch devices) keeps phones smooth no matter how many effects you stack.

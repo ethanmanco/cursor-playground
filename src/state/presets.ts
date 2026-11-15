@@ -69,7 +69,7 @@ export const PRESETS: Preset[] = [
   {
     name: 'Mind melt',
     setup: {
-      lava: { blobs: 8, size: 100, speed: 4 },
+      silk: { ribbons: 3, speed: 3, shine: 6 },
       echo: { copies: 10, delay: 3, spin: 4 },
       trip: { speed: 3, boost: 170 },
     },
@@ -85,7 +85,7 @@ export const PRESETS: Preset[] = [
   {
     name: 'Bubble pop',
     setup: {
-      lava: { blobs: 6, size: 80, speed: 3 },
+      ripples: { color: '#9ec5ff', size: 110, drops: 5 },
       bubbles: { size: 30, amount: 6, tint: 7 },
       orbit: { color: '#9ec5ff', moons: 3, speed: 4 },
     },
@@ -97,6 +97,15 @@ export const PRESETS: Preset[] = [
       smoke: { density: 4, swirl: 6, colors: 3 },
       meteors: { color: '#fff3cf', amount: 5, length: 6 },
       cursor: { shape: 'planet', color: '#ffd166', size: 26 },
+    },
+  },
+  {
+    name: 'Quiet pond',
+    setup: {
+      sky: { theme: 'ocean', stars: 5, glow: 6 },
+      ripples: { color: '#9ec5ff', size: 120, drops: 5 },
+      seeds: { count: 30, size: 11, wind: 3 },
+      halo: { color: '#b9c8ff', size: 110, breath: 4 },
     },
   },
   {

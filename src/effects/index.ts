@@ -1,8 +1,11 @@
 import type { Effect } from '../engine/types';
 import { trip } from './trip';
-import { lava } from './lava';
+import { silk } from './silk';
 import { skyTheme } from './sky';
 import { supernova } from './supernova';
+import { halo } from './halo';
+import { pondRipples } from './ripples';
+import { dandelionSeeds } from './seeds';
 import { smoke } from './smoke';
 import { shootingStars } from './meteors';
 import { magnet } from './magnet';
@@ -39,9 +42,10 @@ import { customCursor } from './cursor';
 export const EFFECTS: Effect[] = [
   skyTheme,
   supernova,
+  halo,
   trip,
   smoke,
-  lava,
+  silk,
   aurora,
   shootingStars,
   warp,
@@ -57,9 +61,11 @@ export const EFFECTS: Effect[] = [
   ribbon,
   boids,
   fireflies,
+  dandelionSeeds,
   orbit,
   comet,
   trail,
+  pondRipples,
   echo,
   soapBubbles,
   confetti,
