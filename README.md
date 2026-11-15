@@ -12,11 +12,12 @@ A small interactive toy set in deep space. Pick effects from the panel, mix seve
 
 It works with a mouse, a finger, or a pen.
 
-## The 25 effects
+## The 28 effects
 
 | Category | Effect | What it does |
 | --- | --- | --- |
-| Your cursor | Custom cursor | Swap the arrow for a rocket, UFO, orb, ring, or star |
+| Scene | Sky theme | Change the backdrop: deep space, nebula, ocean, sunset, or void |
+| Your cursor | Custom cursor | Swap the arrow for a rocket, UFO, orb, ring, star, planet, or heart |
 | Followers | Particle trail | Glowing sparks spill out behind your cursor |
 | Followers | Glowing comet | A bright comet chases your cursor on a spring |
 | Followers | Ribbon snake | A wiggly space snake slithers after you |
@@ -28,21 +29,23 @@ It works with a mouse, a finger, or a pen.
 | Drawing | Rainbow paint | Paint with a brush that cycles through the rainbow |
 | Psychedelic | Color trip | Slowly rolls every color on screen around the rainbow |
 | Psychedelic | Lava lamp | Glossy goo blobs drift, melt together, and follow you (WebGL) |
-| Psychedelic | Moire rings | Two sets of rings overlap into wobbly op art patterns |
+| Psychedelic | Cosmic smoke | Colorful nebula gas drifts slowly and swirls around your cursor (WebGL) |
 | Psychedelic | Echo cursors | Rainbow ghost cursors replay your moves a beat behind |
-| Background | Aurora | Soft northern lights ripple across the sky and lean toward you |
+| Background | Aurora | Northern lights with real-looking rays ripple across the sky and lean toward you (WebGL) |
+| Background | Shooting stars | Shooting stars streak by; click to make a wish and start a shower |
 | Background | Starfield warp | Fly through space toward your cursor; move fast to boost |
 | Background | Parallax drift | Layers of space dust drift by and shift as you move |
 | Background | Ripple grid | A field of dots bends away from you; clicks send a ripple |
 | Background | Constellations | Drifting stars link up and reach out to your cursor |
 | Lighting | Flashlight | Lights out; explore a hidden star map where found stars stay lit and finished constellations draw in; click for a flare |
+| Physics | Magnetic field | Iron filings line up along the field of a magnet you carry |
 | Physics | Gravity well | Your cursor pulls in drifting motes; hold down to push them away |
 | Click | Firework burst | Click or tap anywhere to set off a burst |
 | Click | Soap bubbles | Press and hold to blow bubbles; touch them to pop them |
 | Click | Confetti pop | Click or tap to throw a handful of fluttering confetti |
 | Click | Shockwave | Click or tap to send a glowing ring rushing outward |
 
-There are also 11 presets and a **Randomize** button.
+There are also 12 presets and a **Randomize** button.
 
 More to play with:
 
@@ -50,6 +53,8 @@ More to play with:
 - **Save picture:** download a PNG of what is on screen.
 - **My mixes:** save setups you like. They stay in your browser, ready to bring back with one click.
 - **Zen mode:** hide the panel for a clean view. Press Escape or **Show panel** to bring it back.
+- **Tour:** plays every preset in turn while the ghost cursor shows it off. Any click or key press stops it.
+- **Keyboard shortcuts:** R randomize, 1 to 9 presets, T tour, H hide panel, S save picture, L copy link, ? for the list.
 - **Share links and Copy code**, described below.
 - The title says hello, then fades after 3 seconds so it stays out of the way.
 
@@ -66,7 +71,7 @@ Pushing to `main` deploys to GitHub Pages through `.github/workflows/deploy.yml`
 
 ## How it works
 
-- **Vite + TypeScript**, drawn with **Canvas 2D**. No UI framework. The lava lamp is the one effect that uses **WebGL**, because a per-pixel shader makes its glossy goo smooth and fast; it falls back to soft circles without WebGL.
+- **Vite + TypeScript**, drawn with **Canvas 2D**. No UI framework. Three effects use **WebGL** (lava lamp, aurora, cosmic smoke), because per-pixel shaders make their soft, glossy looks smooth and fast. A small helper in `src/effects/lib/gl.ts` sets up a full-screen shader. Without WebGL they fall back to simpler drawings, or stay hidden.
 - **One shared animation loop** runs every effect. It sleeps when nothing is on and pauses while the tab is hidden.
 - **Two canvas layers** sit behind and in front of the title, so background effects stay behind the text.
 - **A shared particle budget** (1500 on desktop, 500 on touch devices) keeps phones smooth no matter how many effects you stack.
