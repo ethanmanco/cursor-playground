@@ -47,6 +47,22 @@ export const PRESETS: Preset[] = [
       repel: { radius: 180, strength: 7, bounce: 6 },
     },
   },
+  {
+    name: 'Warp speed',
+    setup: {
+      warp: { color: '#cfe3ff', speed: 5, count: 240 },
+      boids: { color: '#6ee7ff', count: 45, speed: 6 },
+      shockwave: { color: '#b28cff', size: 300, speed: 5 },
+    },
+  },
+  {
+    name: 'Party time',
+    setup: {
+      gravity: { color: '#ff7ad9', pull: 5, count: 160 },
+      confetti: { amount: 100, power: 6, size: 10 },
+      fireworks: { color: '#ffd166', sparks: 80, power: 5 },
+    },
+  },
 ];
 
 function randomColor(): string {

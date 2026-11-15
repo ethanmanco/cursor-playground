@@ -7,9 +7,9 @@ import { cleanValue, decodeSetup, encodeSetup, fullValues } from './setup';
 const byId = (id: string) => EFFECTS.find((e) => e.id === id)!;
 
 describe('effect registry', () => {
-  it('has the 12 effects with unique ids', () => {
-    expect(EFFECTS).toHaveLength(12);
-    expect(new Set(EFFECTS.map((e) => e.id)).size).toBe(12);
+  it('has the 17 effects with unique ids', () => {
+    expect(EFFECTS).toHaveLength(17);
+    expect(new Set(EFFECTS.map((e) => e.id)).size).toBe(17);
   });
 
   it('names every effect file after its id (Copy code relies on this)', () => {
@@ -96,8 +96,8 @@ describe('share links', () => {
 });
 
 describe('presets and randomize', () => {
-  it('has 5 presets that only use real effects and survive a link round-trip', () => {
-    expect(PRESETS).toHaveLength(5);
+  it('has 7 presets that only use real effects and survive a link round-trip', () => {
+    expect(PRESETS).toHaveLength(7);
     for (const p of PRESETS) {
       for (const id of Object.keys(p.setup)) expect(byId(id), `${p.name}: ${id}`).toBeDefined();
       const full = Object.fromEntries(Object.entries(p.setup).map(([id, v]) => [id, fullValues(byId(id), v)]));

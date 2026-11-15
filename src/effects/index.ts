@@ -1,4 +1,5 @@
 import type { Effect } from '../engine/types';
+import { warp } from './warp';
 import { parallax } from './parallax';
 import { constellation } from './constellation';
 import { dotGrid } from './dotgrid';
@@ -6,10 +7,14 @@ import { watchingEyes } from './eyes';
 import { flashlight } from './flashlight';
 import { ink } from './ink';
 import { paint } from './paint';
+import { gravity } from './gravity';
+import { boids } from './boids';
 import { ribbon } from './ribbon';
 import { comet } from './comet';
 import { trail } from './trail';
+import { confetti } from './confetti';
 import { fireworks } from './fireworks';
+import { shockwave } from './shockwave';
 import { repel } from './repel';
 
 /**
@@ -20,6 +25,7 @@ import { repel } from './repel';
  * effect id, which is how "Copy code" finds it) and add it here.
  */
 export const EFFECTS: Effect[] = [
+  warp,
   parallax,
   constellation,
   dotGrid,
@@ -27,9 +33,13 @@ export const EFFECTS: Effect[] = [
   flashlight,
   ink,
   paint,
+  gravity,
   ribbon,
+  boids,
   comet,
   trail,
+  confetti,
   fireworks,
+  shockwave,
   repel,
 ];
