@@ -68,8 +68,9 @@ export const parallax: Effect<S> = {
       built = n;
     }
     const p = env.pointer;
-    const tx = (p.x / env.width) * 2 - 1;
-    const ty = (p.y / env.height) * 2 - 1;
+    // On a tilted phone the layers shift with the tilt instead.
+    const tx = env.tilt.active ? env.tilt.x : (p.x / env.width) * 2 - 1;
+    const ty = env.tilt.active ? env.tilt.y : (p.y / env.height) * 2 - 1;
     const ease = Math.min(1, dt * 3);
     ox += (tx - ox) * ease;
     oy += (ty - oy) * ease;

@@ -85,6 +85,8 @@ export interface Env {
   /** Seconds since the engine started. */
   time: number;
   budget: Budget;
+  /** Phone tilt from -1 to 1 in screen directions. Zero on desktops. */
+  tilt: { x: number; y: number; active: boolean };
 }
 
 export interface Effect<S extends Values = Values> {

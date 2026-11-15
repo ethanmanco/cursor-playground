@@ -77,8 +77,8 @@ export const fireworks: Effect<S> = {
       }
       e.px = e.x;
       e.py = e.y;
-      e.vx *= drag;
-      e.vy = e.vy * drag + 160 * dt;
+      e.vx = e.vx * drag + env.tilt.x * 150 * dt;
+      e.vy = e.vy * drag + (160 + env.tilt.y * 70) * dt;
       e.x += e.vx * dt;
       e.y += e.vy * dt;
     }

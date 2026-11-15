@@ -1,5 +1,6 @@
 import { createBudget, defaultCap } from './budget';
 import { trackPointer, type PointerTracker } from './pointer';
+import { trackTilt } from './tilt';
 import type { Effect, Env, Values } from './types';
 
 interface Active {
@@ -28,6 +29,7 @@ export class Engine {
   private last = 0;
   private start = performance.now();
   private order: Map<string, number>;
+  private tiltTick: (dt: number) => void;
 
   constructor(private opts: EngineOptions) {
     const front = opts.front.getContext('2d');
@@ -44,7 +46,9 @@ export class Engine {
       pointer: this.tracker.pointer,
       time: 0,
       budget: createBudget(defaultCap()),
+      tilt: { x: 0, y: 0, active: false },
     };
+    this.tiltTick = trackTilt(this.env.tilt);
     this.resize();
     addEventListener('resize', () => this.resize());
     document.addEventListener('visibilitychange', () => {
@@ -119,6 +123,7 @@ export class Engine {
     this.last = now;
     this.env.time = (now - this.start) / 1000;
     this.tracker.beginFrame(dt);
+    this.tiltTick(dt);
 
     for (const a of this.active) a.effect.update(dt, this.env, a.values);
 

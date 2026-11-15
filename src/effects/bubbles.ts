@@ -89,8 +89,9 @@ export const soapBubbles: Effect<S> = {
       b.age += dt;
       b.wobble += dt * 3;
       b.film += dt * 40;
-      b.vx = b.vx * Math.pow(0.5, dt) + Math.sin(b.wobble * 0.7) * 12 * dt;
-      b.vy = b.vy * Math.pow(0.5, dt) - 18 * dt; // drifts up
+      // Bubbles drift up, and away from whichever way a phone is tipped.
+      b.vx = b.vx * Math.pow(0.5, dt) + (Math.sin(b.wobble * 0.7) * 12 - env.tilt.x * 40) * dt;
+      b.vy = b.vy * Math.pow(0.5, dt) - (18 + env.tilt.y * 14) * dt;
       b.x += b.vx * dt;
       b.y += b.vy * dt;
       const gone = b.y < -b.r * 2 || b.age > 14;

@@ -71,8 +71,9 @@ export const confetti: Effect<S> = {
         env.budget.give(1);
         continue;
       }
-      c.vx *= drag;
-      c.vy = c.vy * drag + 420 * dt;
+      // Tilting a phone tips gravity sideways.
+      c.vx = c.vx * drag + env.tilt.x * 380 * dt;
+      c.vy = c.vy * drag + (420 + env.tilt.y * 180) * dt;
       // Flat pieces catch the air and sway side to side.
       c.x += (c.vx + Math.sin(c.flip) * 30) * dt;
       c.y += c.vy * dt;
