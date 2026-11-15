@@ -16,6 +16,8 @@ export interface PanelOptions {
   autopilot: { get(): boolean; set(on: boolean): void };
   /** Called when the preset tour starts or stops. */
   onTour(on: boolean): void;
+  /** Tilt to steer, offered on phones and tablets only. Resolves false if motion access was refused. */
+  tilt?: (on: boolean) => Promise<boolean>;
 }
 
 export interface Panel {
@@ -145,6 +147,30 @@ export function buildPanel(opts: PanelOptions): Panel {
     ),
     pilot,
   );
+
+  // Tilt to steer (touch devices with motion sensors only).
+  let tiltRow: HTMLElement | null = null;
+  if (opts.tilt) {
+    const tiltSwitch = el('input', { type: 'checkbox', role: 'switch', id: 'tilt', class: 'switch' });
+    tiltSwitch.addEventListener('change', async () => {
+      const ok = await opts.tilt!(tiltSwitch.checked);
+      if (tiltSwitch.checked && !ok) {
+        tiltSwitch.checked = false;
+        announce('Motion access was not allowed, so tilt is off.');
+      }
+    });
+    tiltRow = el(
+      'div',
+      { class: 'option-row' },
+      el(
+        'label',
+        { for: 'tilt', class: 'fx-label' },
+        el('span', { class: 'fx-name' }, 'Tilt to steer'),
+        el('span', { class: 'fx-blurb' }, 'Tilt your phone to roll a glowing marble. The effects follow it.'),
+      ),
+      tiltSwitch,
+    );
+  }
 
   const allOff = el('button', { type: 'button', class: 'action' }, 'Turn all off');
   allOff.addEventListener('click', () => {
@@ -336,6 +362,7 @@ export function buildPanel(opts: PanelOptions): Panel {
       el('div', { class: 'actions' }, allOff, hide),
       el('div', { class: 'actions' }, tour),
       pilotRow,
+      ...(tiltRow ? [tiltRow] : []),
     ),
     el(
       'section',

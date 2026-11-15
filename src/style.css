@@ -695,6 +695,27 @@ body.zen .zen-exit {
   opacity: 1;
 }
 
+/* Tilt to steer marble */
+
+.tilt-marble {
+  position: fixed;
+  left: -9px;
+  top: -9px;
+  z-index: 5;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ffffff, #b9e8ff 40%, #6ee7ff 70%, rgba(110, 231, 255, 0) 72%);
+  box-shadow: 0 0 18px 4px rgba(110, 231, 255, 0.55);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.tilt-marble.on {
+  opacity: 1;
+}
+
 /* Autopilot ghost cursor and its hint */
 
 .ghost-cursor {

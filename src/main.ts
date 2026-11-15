@@ -7,6 +7,8 @@ import { buildPanel } from './ui/panel';
 import { startAutopilot } from './ui/autopilot';
 import { paintSky } from './ui/sky';
 import { savePicture } from './ui/snapshot';
+import { tiltSteer } from './ui/tiltsteer';
+import { recalibrate, requestTilt } from './engine/tilt';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 
@@ -55,6 +57,11 @@ const pilotPref = {
 };
 let pilotOn = pilotPref.get();
 
+// Tilt to steer is offered on touch devices that report motion.
+const canTilt = 'DeviceOrientationEvent' in window && matchMedia('(pointer: coarse)').matches;
+const steer = canTilt ? tiltSteer($('stage'), engine.env.tilt) : null;
+let tiltOn = false;
+
 const panel = buildPanel({
   root: $('panel'),
   app,
@@ -62,6 +69,19 @@ const panel = buildPanel({
   shareLink,
   savePicture: () => savePicture([$<HTMLCanvasElement>('sky'), $<HTMLCanvasElement>('back'), $<HTMLCanvasElement>('front')]),
   autopilot: pilotPref,
+  tilt: steer
+    ? async (on) => {
+        if (on && !(await requestTilt())) {
+          // Some browsers answer "denied" but send motion data anyway.
+          await new Promise((r) => setTimeout(r, 400));
+          if (!engine.env.tilt.active) return false;
+        }
+        recalibrate();
+        tiltOn = on;
+        steer.set(on);
+        return true;
+      }
+    : undefined,
   onTour(on) {
     touring = on;
     if (on) pilot.kick();
@@ -69,7 +89,7 @@ const panel = buildPanel({
 });
 
 let touring = false;
-const pilot = startAutopilot({ stage: $('stage'), allowed: () => (pilotOn || touring) && app.onCount() > 0 });
+const pilot = startAutopilot({ stage: $('stage'), allowed: () => (pilotOn || touring) && !tiltOn && app.onCount() > 0 });
 
 /**
  * Load a setup. People who prefer reduced motion get the values loaded but

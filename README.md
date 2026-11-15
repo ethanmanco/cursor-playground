@@ -54,6 +54,8 @@ More to play with:
 - **My mixes:** save setups you like. They stay in your browser, ready to bring back with one click.
 - **Zen mode:** hide the panel for a clean view. Press Escape or **Show panel** to bring it back.
 - **Tour:** plays every preset in turn while the ghost cursor shows it off. Any click or key press stops it.
+- **Tilt to steer (phones):** tilt your phone to roll a glowing marble around the screen, and the effects follow it. Confetti, fireworks, bubbles, and parallax also lean with the tilt.
+- **Link previews:** shared links show a picture and title in messages and social posts.
 - **Keyboard shortcuts:** R randomize, 1 to 9 presets, T tour, H hide panel, S save picture, L copy link, ? for the list.
 - **Share links and Copy code**, described below.
 - The title says hello, then fades after 3 seconds so it stays out of the way.
@@ -121,6 +123,7 @@ export const sparkle: Effect<S> = {
 A few tips:
 - Ask `env.budget.take(n)` before creating particles and `give` them back when they die.
 - Keep settings in the order you first published them. Add new ones at the end so old share links keep working.
+- `env.tilt` gives phone tilt as `x` and `y` from -1 to 1 (zero on desktops), if you want an effect to lean with the phone.
 - `env.pointer` gives you `x`, `y`, the previous frame's `px`, `py`, velocity, and whether it is `down` or `inside` the page.
 
 ## Future ideas
