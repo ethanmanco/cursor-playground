@@ -379,7 +379,7 @@ input {
   min-width: 0;
 }
 
-.group legend {
+.group > legend {
   padding: 0;
   margin-bottom: 8px;
   font-family: var(--mono);
@@ -389,7 +389,7 @@ input {
   color: var(--cat);
 }
 
-.group legend::before {
+.group > legend::before {
   content: '';
   display: inline-block;
   width: 14px;
