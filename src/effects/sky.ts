@@ -1,5 +1,5 @@
 import type { Effect } from '../engine/types';
-import { paintSkyInto, SKY_THEMES } from './lib/skypaint';
+import { paintSkyInto, SKY_THEMES, skyState } from './lib/skypaint';
 
 type S = { theme: string; stars: number; glow: number };
 
@@ -8,6 +8,7 @@ type S = { theme: string; stars: number; glow: number };
 // costs almost nothing and other effects (like Color trip) still apply.
 
 let cache: HTMLCanvasElement | null = null;
+let starless: HTMLCanvasElement | null = null;
 let cacheFor = '';
 
 export const skyTheme: Effect<S> = {
@@ -42,20 +43,29 @@ export const skyTheme: Effect<S> = {
   update() {},
 
   draw(env, s) {
+    skyState.stars = s.stars;
     const key = `${s.theme}|${s.stars}|${s.glow}|${env.width}|${env.height}|${env.dpr}`;
+    const paint = (stars: boolean) => {
+      const c = document.createElement('canvas');
+      c.width = Math.round(env.width * env.dpr);
+      c.height = Math.round(env.height * env.dpr);
+      const g = c.getContext('2d')!;
+      g.setTransform(env.dpr, 0, 0, env.dpr, 0, 0);
+      paintSkyInto(g, env.width, env.height, SKY_THEMES[s.theme] ?? SKY_THEMES.space, s.stars, s.glow, stars);
+      return c;
+    };
     if (key !== cacheFor) {
-      cache ??= document.createElement('canvas');
-      cache.width = Math.round(env.width * env.dpr);
-      cache.height = Math.round(env.height * env.dpr);
-      const c = cache.getContext('2d')!;
-      c.setTransform(env.dpr, 0, 0, env.dpr, 0, 0);
-      paintSkyInto(c, env.width, env.height, SKY_THEMES[s.theme] ?? SKY_THEMES.space, s.stars, s.glow);
+      cache = paint(true);
+      starless = null;
       cacheFor = key;
     }
-    env.back.drawImage(cache!, 0, 0, env.width, env.height);
+    // While a supernova moves the stars, show the sky without them.
+    if (skyState.starsHidden || skyState.wantStarless) starless ??= paint(false);
+    env.back.drawImage(skyState.starsHidden ? starless! : cache!, 0, 0, env.width, env.height);
   },
 
   teardown() {
     cacheFor = '';
+    skyState.stars = 6;
   },
 };

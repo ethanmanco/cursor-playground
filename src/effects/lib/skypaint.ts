@@ -48,6 +48,52 @@ export const SKY_THEMES: Record<string, SkyTheme> = {
   void: { base: '#000000', clouds: [] },
 };
 
+export interface SkyStar {
+  x: number;
+  y: number;
+  r: number;
+  alpha: number;
+  tint: string; // "r,g,b"
+}
+
+const TINTS = ['255,255,255', '200,220,255', '255,230,210', '190,255,250'];
+
+/** The stars in a sky of this size. Same positions every time (seeded). */
+export function skyStars(w: number, h: number, stars = 6): SkyStar[] {
+  let seed = 7;
+  const rand = () => {
+    seed = (seed * 16807) % 2147483647;
+    return seed / 2147483647;
+  };
+  const count = Math.round(((w * h) / 2600) * (stars / 6));
+  const out: SkyStar[] = [];
+  for (let i = 0; i < count; i++) {
+    const x = rand() * w;
+    const y = rand() * h;
+    const bright = rand();
+    const r = bright > 0.985 ? 1.6 : bright > 0.9 ? 1.1 : 0.6;
+    out.push({ x, y, r, alpha: 0.35 + bright * 0.6, tint: TINTS[Math.floor(rand() * TINTS.length)] });
+  }
+  return out;
+}
+
+/**
+ * Shared sky settings. The Sky theme effect records its star amount here,
+ * and the supernova hides the painted stars while it moves its own copies.
+ */
+export const skyState = {
+  stars: 6,
+  starsHidden: false,
+  /** Set while the supernova is on, so starless skies get painted ahead of time. */
+  wantStarless: false,
+  listeners: new Set<() => void>(),
+  hideStars(hidden: boolean) {
+    if (this.starsHidden === hidden) return;
+    this.starsHidden = hidden;
+    for (const fn of this.listeners) fn();
+  },
+};
+
 export function paintSkyInto(
   ctx: CanvasRenderingContext2D,
   w: number,
@@ -55,13 +101,8 @@ export function paintSkyInto(
   theme: SkyTheme,
   stars = 6,
   glow = 6,
+  withStars = true,
 ): void {
-  let seed = 7;
-  const rand = () => {
-    seed = (seed * 16807) % 2147483647;
-    return seed / 2147483647;
-  };
-
   ctx.fillStyle = theme.base;
   ctx.fillRect(0, 0, w, h);
 
@@ -75,23 +116,19 @@ export function paintSkyInto(
     ctx.fillRect(0, 0, w, h);
   }
 
-  const count = Math.round(((w * h) / 2600) * (stars / 6));
-  const tints = ['255,255,255', '200,220,255', '255,230,210', '190,255,250'];
-  for (let i = 0; i < count; i++) {
-    const x = rand() * w;
-    const y = rand() * h;
-    const bright = rand();
-    const r = bright > 0.985 ? 1.6 : bright > 0.9 ? 1.1 : 0.6;
-    ctx.fillStyle = `rgba(${tints[Math.floor(rand() * tints.length)]},${0.35 + bright * 0.6})`;
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fill();
-    if (r > 1.5) {
-      const g = ctx.createRadialGradient(x, y, 0, x, y, 9);
-      g.addColorStop(0, 'rgba(200,220,255,0.35)');
-      g.addColorStop(1, 'rgba(200,220,255,0)');
-      ctx.fillStyle = g;
-      ctx.fillRect(x - 9, y - 9, 18, 18);
+  if (withStars) {
+    for (const st of skyStars(w, h, stars)) {
+      ctx.fillStyle = `rgba(${st.tint},${st.alpha})`;
+      ctx.beginPath();
+      ctx.arc(st.x, st.y, st.r, 0, Math.PI * 2);
+      ctx.fill();
+      if (st.r > 1.5) {
+        const g = ctx.createRadialGradient(st.x, st.y, 0, st.x, st.y, 9);
+        g.addColorStop(0, 'rgba(200,220,255,0.35)');
+        g.addColorStop(1, 'rgba(200,220,255,0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(st.x - 9, st.y - 9, 18, 18);
+      }
     }
   }
 
