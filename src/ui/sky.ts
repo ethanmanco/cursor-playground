@@ -59,6 +59,22 @@ export function paintSky(canvas: HTMLCanvasElement): void {
         ctx.fillRect(x - 9, y - 9, 18, 18);
       }
     }
+
+    // A touch of grain hides the banding that smooth 8-bit gradients get.
+    // Without it, Color trip makes those bands stand out as lines.
+    const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const px = img.data;
+    let noise = 12345;
+    for (let i = 0; i < px.length; i += 4) {
+      noise ^= noise << 13;
+      noise ^= noise >>> 17;
+      noise ^= noise << 5;
+      const n = ((noise >>> 0) / 4294967296 - 0.5) * 7;
+      px[i] += n;
+      px[i + 1] += n;
+      px[i + 2] += n;
+    }
+    ctx.putImageData(img, 0, 0);
   };
   draw();
   let t = 0;

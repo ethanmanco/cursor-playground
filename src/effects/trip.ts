@@ -22,7 +22,7 @@ export const trip: Effect<S> = {
   layer: 'back',
   settings: [
     { kind: 'range', key: 'speed', label: 'Speed', min: 1, max: 10, step: 1, default: 3 },
-    { kind: 'range', key: 'boost', label: 'Color boost', min: 100, max: 300, step: 10, default: 170, unit: '%' },
+    { kind: 'range', key: 'boost', label: 'Color boost', min: 100, max: 200, step: 10, default: 140, unit: '%' },
   ],
 
   setup(env) {
