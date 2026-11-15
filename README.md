@@ -53,10 +53,14 @@ More to play with:
 - **Save picture:** download a PNG of what is on screen.
 - **My mixes:** save setups you like. They stay in your browser, ready to bring back with one click.
 - **Zen mode:** hide the panel for a clean view. Press Escape or **Show panel** to bring it back.
+- **Supernova:** double-click or double-tap anywhere (or press N). Everything gets pulled into one point, then bursts outward.
+- **Slow motion and freeze:** hold Space (or press **Slow motion**) to drop to 20% speed, and press F (or **Freeze**) to stop time.
+- **Effects react to each other:** shockwaves shove particles and pop bubbles, fireworks wake up fireflies and briefly light up the flashlight's hidden map, shooting stars pop bubbles, and the gravity well pulls on everything.
+- **Sound (optional):** off by default. Soft generated sounds for fireworks, pops, wishes, flares, and supernovas, panned left and right and lower in slow motion. Press M to toggle.
 - **Tour:** plays every preset in turn while the ghost cursor shows it off. Any click or key press stops it.
 - **Tilt to steer (phones):** tilt your phone to roll a glowing marble around the screen, and the effects follow it. Confetti, fireworks, bubbles, and parallax also lean with the tilt.
 - **Link previews:** shared links show a picture and title in messages and social posts.
-- **Keyboard shortcuts:** R randomize, 1 to 9 presets, T tour, H hide panel, S save picture, L copy link, ? for the list.
+- **Keyboard shortcuts:** R randomize, 1 to 9 presets, T tour, Space slow motion, F freeze, N supernova, M sound, H hide panel, S save picture, L copy link, ? for the list.
 - **Share links and Copy code**, described below.
 - The title says hello, then fades after 3 seconds so it stays out of the way.
 
@@ -124,6 +128,8 @@ A few tips:
 - Ask `env.budget.take(n)` before creating particles and `give` them back when they die.
 - Keep settings in the order you first published them. Add new ones at the end so old share links keep working.
 - `env.tilt` gives phone tilt as `x` and `y` from -1 to 1 (zero on desktops), if you want an effect to lean with the phone.
+- To react to other effects, call `blastAt(env.blasts, x, y)` for each particle and add the returned `fx`, `fy` to its speed. To make a bang others feel, call `env.blast({ x, y, radius, strength, kind: 'push' })`.
+- Call `env.cue('pop', x)` (or another cue name) for moments that should make a sound when sound is on.
 - `env.pointer` gives you `x`, `y`, the previous frame's `px`, `py`, velocity, and whether it is `down` or `inside` the page.
 
 ## Future ideas
