@@ -3,9 +3,10 @@ import { rgba } from './lib/color';
 
 type S = { color: string; spacing: number; strength: number };
 
-// Iron filings around a magnet. Your cursor is the magnet's north pole and
-// its south pole trails behind you, so the filings line up along curving
-// field lines and swing smoothly as you move.
+// Iron filings around a bar magnet that sits right on your cursor. Its two
+// poles are on either side of the cursor, so the filings line up along
+// curving field lines around it. The magnet slowly turns to point the way you
+// move, and the filings swing smoothly to follow.
 
 let angles = new Float32Array(0);
 let bright = new Float32Array(0);
@@ -20,6 +21,7 @@ let dirY = 0;
 let near = 0;
 
 const LEVELS = 6;
+const HALF = 55; // distance from the cursor to each pole
 
 export const magnet: Effect<S> = {
   id: 'magnet',
@@ -52,9 +54,9 @@ export const magnet: Effect<S> = {
     }
 
     const p = env.pointer;
-    const ease = Math.min(1, dt * 10);
-    nx += (p.x - nx) * ease;
-    ny += (p.y - ny) * ease;
+    // The magnet's middle stays right on the cursor.
+    nx = p.x;
+    ny = p.y;
     const speed = Math.hypot(p.vx, p.vy);
     if (speed > 30) {
       // The magnet points the way you move.
@@ -66,8 +68,10 @@ export const magnet: Effect<S> = {
       dirY /= l;
     }
     near += ((p.inside ? 1 : 0.45) - near) * Math.min(1, dt * 2);
-    const sx = nx - dirX * 130;
-    const sy = ny - dirY * 130;
+    const ax0 = nx + dirX * HALF;
+    const ay0 = ny + dirY * HALF;
+    const sx = nx - dirX * HALF;
+    const sy = ny - dirY * HALF;
 
     const turn = Math.min(1, dt * 9);
     let i = 0;
@@ -75,8 +79,8 @@ export const magnet: Effect<S> = {
       for (let c = 0; c < cols; c++, i++) {
         const x = c * spacing;
         const y = r * spacing;
-        const ax = x - nx;
-        const ay = y - ny;
+        const ax = x - ax0;
+        const ay = y - ay0;
         const bx = x - sx;
         const by = y - sy;
         const da = Math.pow(ax * ax + ay * ay + 100, 1.5);
@@ -124,6 +128,25 @@ export const magnet: Effect<S> = {
       if (!any) continue;
       ctx.strokeStyle = rgba(s.color, Math.min(1, (0.12 + hi * 0.88) * glow));
       ctx.stroke();
+    }
+
+    // A small bar magnet on the cursor: warm north half, cool south half.
+    if (env.pointer.inside) {
+      ctx.save();
+      ctx.translate(nx, ny);
+      ctx.rotate(Math.atan2(dirY, dirX));
+      ctx.globalAlpha = 0.9;
+      const L = HALF * 0.75;
+      const T = 9;
+      ctx.fillStyle = '#ff8a8a';
+      ctx.beginPath();
+      ctx.roundRect(0, -T / 2, L, T, [0, T / 2, T / 2, 0]);
+      ctx.fill();
+      ctx.fillStyle = '#8ab8ff';
+      ctx.beginPath();
+      ctx.roundRect(-L, -T / 2, L, T, [T / 2, 0, 0, T / 2]);
+      ctx.fill();
+      ctx.restore();
     }
   },
 
