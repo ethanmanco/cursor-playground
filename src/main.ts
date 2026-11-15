@@ -1,33 +1,21 @@
 import './style.css';
 import { Engine } from './engine/engine';
-import { defaultValues } from './engine/types';
+import { splitHeading } from './engine/split';
 import { EFFECTS } from './effects';
-import { buildPanel, type EffectState } from './ui/panel';
+import { App } from './state/app';
+import { decodeSetup, encodeSetup, type Setup } from './state/setup';
+import { buildPanel } from './ui/panel';
 import { paintSky } from './ui/sky';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 
-const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+// `?reduce` fakes the reduced-motion setting while developing.
+const reducedMotion =
+  matchMedia('(prefers-reduced-motion: reduce)').matches ||
+  (import.meta.env.DEV && new URLSearchParams(location.search).has('reduce'));
 
-// Split the heading into letters so the repel effect can move them.
-// Screen readers still read the whole phrase from aria-label.
 const heading = $('heading');
-const text = heading.textContent ?? '';
-heading.setAttribute('aria-label', text);
-heading.textContent = '';
-for (const word of text.split(' ')) {
-  const w = document.createElement('span');
-  w.className = 'word';
-  w.setAttribute('aria-hidden', 'true');
-  for (const ch of word) {
-    const c = document.createElement('span');
-    c.className = 'char';
-    c.textContent = ch;
-    w.append(c);
-  }
-  heading.append(w, ' ');
-}
-
+splitHeading(heading);
 paintSky($<HTMLCanvasElement>('sky'));
 
 const engine = new Engine({
@@ -37,31 +25,51 @@ const engine = new Engine({
   heading,
   registry: EFFECTS,
 });
+const app = new App(engine, EFFECTS);
 
-// Handy for poking at the engine from DevTools while developing.
-if (import.meta.env.DEV) Object.assign(window, { __engine: engine });
+// Handy for poking at things from DevTools while developing.
+if (import.meta.env.DEV) Object.assign(window, { __engine: engine, __app: app });
 
-// Starting setup. With reduced motion, everything stays off until chosen.
-const STARTERS = reducedMotion ? [] : ['trail', 'fireworks'];
-const state = new Map<string, EffectState>(
-  EFFECTS.map((e) => [e.id, { on: STARTERS.includes(e.id), values: defaultValues(e) }]),
-);
+const STARTER: Setup = { trail: {}, fireworks: {} };
 
-for (const fx of EFFECTS) {
-  const st = state.get(fx.id)!;
-  if (st.on) engine.enable(fx, st.values);
+const shareHash = () => '#' + encodeSetup(app.current(), EFFECTS);
+const shareLink = () => location.origin + location.pathname + shareHash();
+
+const panel = buildPanel({ root: $('panel'), app, reducedMotion, shareLink });
+
+/**
+ * Load a setup. People who prefer reduced motion get the values loaded but
+ * nothing moving, plus a button to turn the shared effects on.
+ */
+let pending: Setup | null = null;
+let loading = false;
+
+function load(setup: Setup) {
+  loading = true;
+  pending = reducedMotion && Object.keys(setup).length ? setup : null;
+  app.apply(setup, { enable: !pending });
+  panel.showPending(pending);
+  loading = false;
 }
 
-buildPanel({
-  root: $('panel'),
-  effects: EFFECTS,
-  state,
-  reducedMotion,
-  onToggle(fx, on) {
-    if (on) engine.enable(fx, state.get(fx.id)!.values);
-    else engine.disable(fx);
-  },
-  onChange() {
-    // Values are read live each frame, so nothing else to do yet.
-  },
+load(decodeSetup(location.hash, EFFECTS) ?? (reducedMotion ? {} : STARTER));
+
+// Keep the address bar in sync so copying it from the browser works too.
+// While a shared setup waits to be turned on, the link stays as it was.
+let urlTimer = 0;
+app.onChange((kind) => {
+  if (loading) return;
+  if (kind === 'structure' && pending) {
+    pending = null;
+    panel.showPending(null);
+  }
+  if (pending) return;
+  clearTimeout(urlTimer);
+  urlTimer = window.setTimeout(() => history.replaceState(null, '', shareHash()), 250);
+});
+
+// A share link pasted into this same tab only changes the hash.
+addEventListener('hashchange', () => {
+  const setup = decodeSetup(location.hash, EFFECTS);
+  if (setup) load(setup);
 });

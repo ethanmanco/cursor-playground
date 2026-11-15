@@ -227,28 +227,150 @@ input {
   line-height: 1.45;
 }
 
-.tools {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 6px;
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
-.ghost {
-  padding: 8px 14px;
+.notice p {
+  margin: 0 0 10px;
+}
+
+.notice.pending {
+  background: rgba(110, 231, 255, 0.08);
+  border-color: rgba(110, 231, 255, 0.35);
+}
+
+.notice[hidden] {
+  display: none;
+}
+
+/* Quick start */
+
+.quick {
+  padding: 4px 0 6px;
+}
+
+.section-title {
+  margin: 0 0 8px;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  padding: 7px 12px;
   border-radius: 999px;
   border: 1px solid var(--glass-edge);
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.05);
   font-size: 0.85rem;
   cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
 }
 
-.ghost:hover:not(:disabled) {
+.chip:hover {
+  background: rgba(178, 140, 255, 0.16);
+  border-color: rgba(178, 140, 255, 0.5);
+}
+
+.chip-random {
+  border-style: dashed;
+  border-color: rgba(255, 209, 102, 0.55);
+  color: var(--gold);
+}
+
+.chip-random::before {
+  content: '\2726';
+  margin-right: 6px;
+}
+
+.chip-random:hover {
+  background: rgba(255, 209, 102, 0.12);
+  border-color: var(--gold);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.action {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--glass-edge);
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.action:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.1);
 }
 
-.ghost:disabled {
+.action:disabled {
   opacity: 0.45;
   cursor: default;
+}
+
+.action-primary {
+  border-color: transparent;
+  background: linear-gradient(135deg, #5b6cff, #b28cff);
+  color: #fff;
+}
+
+.action-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #6c7bff, #c3a3ff);
+}
+
+.action.done,
+.copy-code.done {
+  background: rgba(138, 255, 193, 0.18);
+  border-color: rgba(138, 255, 193, 0.6);
+  color: #c9ffe2;
+}
+
+.copy-code {
+  justify-self: start;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.2);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.copy-code::before {
+  content: '</>';
+  margin-right: 6px;
+  color: var(--cat);
+}
+
+.copy-code.done::before {
+  content: '';
+  margin: 0;
+}
+
+.copy-code:hover {
+  background: rgba(255, 255, 255, 0.08);
 }
 
 /* Category groups */
@@ -474,6 +596,50 @@ input[type='range']::-moz-range-thumb {
   background: #fff;
   border: 0;
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--cat) 35%, transparent), 0 0 14px var(--cat);
+}
+
+/* Fallback dialog for when the clipboard is blocked */
+
+.copy-dialog {
+  width: min(560px, calc(100vw - 32px));
+  padding: 20px;
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--radius);
+  background: #0e1026;
+  color: var(--ink);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+}
+
+.copy-dialog::backdrop {
+  background: rgba(3, 4, 12, 0.7);
+}
+
+.copy-dialog h2 {
+  margin: 0 0 6px;
+  font-size: 1.1rem;
+}
+
+.copy-dialog p {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.copy-dialog textarea {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--glass-edge);
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  resize: vertical;
+}
+
+.copy-dialog .action {
+  margin-top: 12px;
+  width: 100%;
 }
 
 /* ---------- Phones: panel becomes a bottom sheet ---------- */

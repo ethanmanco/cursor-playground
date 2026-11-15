@@ -1,22 +1,20 @@
-import { CATEGORY_LABELS, CATEGORY_ORDER, type Effect, type SettingDef, type Values } from '../engine/types';
-
-export interface EffectState {
-  on: boolean;
-  values: Values;
-}
+import { CATEGORY_LABELS, CATEGORY_ORDER, type Effect, type SettingDef } from '../engine/types';
+import type { App } from '../state/app';
+import { PRESETS, randomSetup } from '../state/presets';
+import type { Setup } from '../state/setup';
+import { copyText, showManualCopy, snippetFor } from './copy';
 
 export interface PanelOptions {
   root: HTMLElement;
-  effects: Effect[];
-  state: Map<string, EffectState>;
+  app: App;
   reducedMotion: boolean;
-  onToggle(effect: Effect, on: boolean): void;
-  onChange(effect: Effect, key: string, value: number | string): void;
+  /** Returns the full share link for the current setup. */
+  shareLink(): string;
 }
 
 export interface Panel {
-  /** Re-sync every control with the current state (after presets or links). */
-  refresh(): void;
+  /** Show (or clear) the "this link has effects, turn them on" notice. */
+  showPending(setup: Setup | null): void;
 }
 
 function el<K extends keyof HTMLElementTagNameMap>(
@@ -37,11 +35,35 @@ const fmt = (def: SettingDef, v: number | string) =>
   def.kind === 'range' ? `${v}${def.unit ?? ''}` : String(v).toUpperCase();
 
 export function buildPanel(opts: PanelOptions): Panel {
-  const { root, effects, state } = opts;
+  const { root, app } = opts;
+  const effects = app.effects;
   const narrow = matchMedia('(max-width: 720px)');
   const syncers: (() => void)[] = [];
 
-  // Header: title, live count, and the collapse button (always shown on phones).
+  // Screen reader announcements ("Link copied", and so on).
+  const live = el('p', { class: 'sr-only', role: 'status', 'aria-live': 'polite' });
+  const announce = (msg: string) => {
+    live.textContent = '';
+    window.setTimeout(() => (live.textContent = msg), 50);
+  };
+
+  /** Briefly swap a button's label to confirm an action. */
+  const flash = (btn: HTMLButtonElement, msg: string) => {
+    const label = btn.dataset.label ?? btn.textContent ?? '';
+    btn.dataset.label = label;
+    btn.textContent = msg;
+    btn.classList.add('done');
+    clearTimeout(Number(btn.dataset.timer));
+    btn.dataset.timer = String(
+      window.setTimeout(() => {
+        btn.textContent = label;
+        btn.classList.remove('done');
+      }, 1600),
+    );
+    announce(msg);
+  };
+
+  // ----- Header -----
   const count = el('span', { class: 'count' });
   const toggle = el(
     'button',
@@ -50,9 +72,7 @@ export function buildPanel(opts: PanelOptions): Panel {
     count,
     el('span', { class: 'chevron', 'aria-hidden': 'true' }),
   );
-  const allOff = el('button', { class: 'ghost', type: 'button' }, 'Turn all off');
   const body = el('div', { class: 'panel-body', id: 'panel-body' });
-
   const setOpen = (open: boolean) => {
     toggle.setAttribute('aria-expanded', String(open));
     root.classList.toggle('is-open', open);
@@ -60,34 +80,63 @@ export function buildPanel(opts: PanelOptions): Panel {
   toggle.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true'));
   setOpen(!narrow.matches);
   narrow.addEventListener('change', (e) => setOpen(!e.matches));
+  root.append(el('div', { class: 'panel-head' }, toggle), body, live);
 
-  root.append(el('div', { class: 'panel-head' }, toggle), body);
-
+  // ----- Notices -----
   if (opts.reducedMotion) {
     body.append(
       el(
         'p',
-        { class: 'notice', role: 'status' },
+        { class: 'notice' },
         el('strong', {}, 'Motion is off for now. '),
         'Your device asks for less motion, so every effect starts switched off. Turn on any effect below when you are ready.',
       ),
     );
   }
+  const pendingBox = el('div', { class: 'notice pending', hidden: '' });
+  body.append(pendingBox);
 
-  const tools = el('div', { class: 'tools' }, allOff);
-  body.append(tools);
+  // ----- Quick start: presets, randomize, share -----
+  const presetRow = el('div', { class: 'chips' });
+  for (const preset of PRESETS) {
+    const b = el('button', { type: 'button', class: 'chip' }, preset.name);
+    b.addEventListener('click', () => {
+      app.apply(preset.setup);
+      announce(`${preset.name} preset on`);
+    });
+    presetRow.append(b);
+  }
+  const random = el('button', { type: 'button', class: 'chip chip-random' }, 'Randomize');
+  random.addEventListener('click', () => {
+    app.apply(randomSetup(effects));
+    const names = effects.filter((fx) => app.get(fx).on).map((fx) => fx.name);
+    announce(`Random mix: ${names.join(', ')}`);
+  });
+  presetRow.append(random);
 
+  const share = el('button', { type: 'button', class: 'action action-primary' }, 'Copy share link');
+  share.addEventListener('click', async () => {
+    const link = opts.shareLink();
+    if (await copyText(link)) flash(share, 'Link copied!');
+    else showManualCopy('Your share link', link);
+  });
+  const allOff = el('button', { type: 'button', class: 'action' }, 'Turn all off');
   allOff.addEventListener('click', () => {
-    for (const fx of effects) {
-      const st = state.get(fx.id)!;
-      if (st.on) {
-        st.on = false;
-        opts.onToggle(fx, false);
-      }
-    }
-    refresh();
+    app.apply({});
+    announce('All effects off');
   });
 
+  body.append(
+    el(
+      'section',
+      { class: 'quick', 'aria-labelledby': 'presets-title' },
+      el('h2', { id: 'presets-title', class: 'section-title' }, 'Try a preset'),
+      presetRow,
+      el('div', { class: 'actions' }, share, allOff),
+    ),
+  );
+
+  // ----- Effects by category -----
   for (const cat of CATEGORY_ORDER) {
     const list = effects.filter((e) => e.category === cat);
     if (!list.length) continue;
@@ -97,7 +146,7 @@ export function buildPanel(opts: PanelOptions): Panel {
   }
 
   function effectCard(fx: Effect): HTMLElement {
-    const st = state.get(fx.id)!;
+    const st = app.get(fx);
     const switchId = `fx-${fx.id}`;
     const settingsId = `fx-${fx.id}-settings`;
     const sw = el('input', {
@@ -131,19 +180,12 @@ export function buildPanel(opts: PanelOptions): Panel {
       const out = el('output', { for: id, class: 'value' });
       const input =
         def.kind === 'range'
-          ? el('input', {
-              type: 'range',
-              id,
-              min: String(def.min),
-              max: String(def.max),
-              step: String(def.step),
-            })
+          ? el('input', { type: 'range', id, min: String(def.min), max: String(def.max), step: String(def.step) })
           : el('input', { type: 'color', id });
       input.addEventListener('input', () => {
         const v = def.kind === 'range' ? Number(input.value) : input.value;
-        st.values[def.key] = v;
         out.textContent = fmt(def, v);
-        opts.onChange(fx, def.key, v);
+        app.setValue(fx, def.key, v);
       });
       settings.append(
         el(
@@ -160,33 +202,60 @@ export function buildPanel(opts: PanelOptions): Panel {
       });
     }
 
-    sw.addEventListener('change', () => {
-      st.on = sw.checked;
-      opts.onToggle(fx, sw.checked);
-      sync();
-      updateCount();
+    const copy = el('button', { type: 'button', class: 'copy-code' }, 'Copy code');
+    copy.setAttribute('aria-label', `Copy code for ${fx.name}`);
+    copy.addEventListener('click', async () => {
+      let code: string;
+      try {
+        code = await snippetFor(fx, { ...st.values });
+      } catch {
+        flash(copy, 'Could not load code');
+        return;
+      }
+      if (await copyText(code)) flash(copy, 'Code copied!');
+      else showManualCopy(`Code for ${fx.name}`, code);
     });
+    settings.append(copy);
 
-    const sync = () => {
+    sw.addEventListener('change', () => app.setOn(fx, sw.checked));
+
+    syncers.push(() => {
       sw.checked = st.on;
       card.classList.toggle('is-on', st.on);
       settings.hidden = !st.on;
-    };
-    syncers.push(sync);
+    });
     return card;
-  }
-
-  function updateCount() {
-    const n = effects.filter((e) => state.get(e.id)!.on).length;
-    count.textContent = n ? `${n} on` : 'all off';
-    allOff.disabled = n === 0;
   }
 
   function refresh() {
     for (const s of syncers) s();
-    updateCount();
+    const n = app.onCount();
+    count.textContent = n ? `${n} on` : 'all off';
+    allOff.disabled = n === 0;
   }
 
+  app.onChange((kind) => {
+    if (kind === 'structure') refresh();
+  });
   refresh();
-  return { refresh };
+
+  return {
+    showPending(setup) {
+      pendingBox.replaceChildren();
+      const ids = setup ? Object.keys(setup) : [];
+      pendingBox.hidden = ids.length === 0;
+      if (!setup || !ids.length) return;
+      const names = effects.filter((fx) => ids.includes(fx.id)).map((fx) => fx.name);
+      const on = el('button', { type: 'button', class: 'action action-primary' }, 'Turn them on');
+      on.addEventListener('click', () => {
+        app.apply(setup);
+        pendingBox.hidden = true;
+        announce(`${names.length} effects on`);
+      });
+      pendingBox.append(
+        el('p', {}, el('strong', {}, 'This link shares a setup: '), `${names.join(', ')}.`),
+        on,
+      );
+    },
+  };
 }
