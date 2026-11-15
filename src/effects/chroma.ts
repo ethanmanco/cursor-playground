@@ -29,6 +29,7 @@ export const chroma: Effect<S> = {
   blurb: 'Red, green, and blue copies of your cursor split apart as you move.',
   category: 'trippy',
   layer: 'front',
+  marksCursor: true,
   settings: [
     { kind: 'range', key: 'spread', label: 'Split', min: 1, max: 10, step: 1, default: 5 },
     { kind: 'range', key: 'size', label: 'Size', min: 14, max: 40, step: 2, default: 22 },

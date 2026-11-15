@@ -166,6 +166,15 @@ app.onChange((kind) => {
   urlTimer = window.setTimeout(() => history.replaceState(null, '', shareHash()), 250);
 });
 
+// Show the normal cursor, except while an effect draws its own marker right
+// at the pointer (custom cursor, chromatic cursor, magnet).
+const syncCursor = () =>
+  $('stage').classList.toggle('hide-cursor', app.effects.some((fx) => fx.marksCursor && app.get(fx).on));
+app.onChange((kind) => {
+  if (kind === 'structure') syncCursor();
+});
+syncCursor();
+
 // The title greets people, then fades so it stays out of the way.
 const TITLE_SECONDS = 3;
 window.setTimeout(() => document.querySelector('.hero')?.classList.add('is-faded'), TITLE_SECONDS * 1000);

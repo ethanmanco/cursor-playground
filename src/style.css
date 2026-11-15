@@ -67,7 +67,12 @@ input {
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
-  cursor: crosshair;
+  cursor: default;
+}
+
+/* Hidden only while an effect draws its own marker right at the pointer. */
+.stage.hide-cursor {
+  cursor: none;
 }
 
 .hero {

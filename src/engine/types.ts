@@ -128,6 +128,11 @@ export interface Effect<S extends Values = Values> {
   layer: 'back' | 'front';
   /** Set to false when Copy code makes no sense for this effect. */
   snippet?: false;
+  /**
+   * True when the effect draws its own marker exactly where the pointer is
+   * (like a custom cursor). While one is on, the page hides the normal cursor.
+   */
+  marksCursor?: boolean;
   /** Two or three controls. */
   settings: SettingDef[];
   setup(env: Env, s: S): void;

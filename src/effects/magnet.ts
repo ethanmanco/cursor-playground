@@ -29,6 +29,7 @@ export const magnet: Effect<S> = {
   blurb: 'Iron filings line up along the field of a magnet you carry.',
   category: 'physics',
   layer: 'back',
+  marksCursor: true,
   settings: [
     { kind: 'color', key: 'color', label: 'Color', default: '#9ec5ff' },
     { kind: 'range', key: 'spacing', label: 'Spacing', min: 16, max: 40, step: 2, default: 24 },

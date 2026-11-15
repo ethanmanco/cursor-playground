@@ -45,6 +45,7 @@ export const customCursor: Effect<S> = {
   blurb: 'Swap the arrow for a rocket, UFO, orb, ring, star, planet, or heart.',
   category: 'cursor',
   layer: 'front',
+  marksCursor: true,
   settings: [
     {
       kind: 'choice',
