@@ -21,6 +21,16 @@ export function snippets(): Plugin {
 
   return {
     name: 'cursor-playground-snippets',
+    configureServer(server) {
+      // Rebuild the snippets when an effect file is added or removed.
+      const refresh = (file: string) => {
+        if (!resolve(file).startsWith(effectsDir)) return;
+        const mod = server.moduleGraph.getModuleById(RESOLVED);
+        if (mod) server.moduleGraph.invalidateModule(mod);
+      };
+      server.watcher.on('add', refresh);
+      server.watcher.on('unlink', refresh);
+    },
     resolveId(id) {
       if (id === VIRTUAL) return RESOLVED;
     },
