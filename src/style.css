@@ -79,6 +79,11 @@ input {
   padding: 24px;
   padding-right: calc(24px + 340px);
   pointer-events: none;
+  transition: opacity 1.2s ease;
+}
+
+.hero.is-faded {
+  opacity: 0;
 }
 
 .eyebrow {

@@ -35,7 +35,7 @@ function measure(env: Env) {
 export const repel: Effect<S> = {
   id: 'repel',
   name: 'Repel field',
-  blurb: 'The big title letters scatter away from your cursor.',
+  blurb: 'Brings back the title, then scatters its letters away from your cursor.',
   category: 'physics',
   layer: 'front',
   settings: [

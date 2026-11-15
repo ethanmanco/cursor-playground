@@ -26,7 +26,7 @@ It works with a mouse, a finger, or a pen.
 | Background | Ripple grid | A field of dots bends away from you; clicks send a ripple |
 | Background | Constellations | Drifting stars link up and reach out to your cursor |
 | Lighting | Flashlight | Lights out; shine a beam to find a hidden star map |
-| Physics | Repel field | The big title letters scatter away from your cursor |
+| Physics | Repel field | Brings back the title, then scatters its letters away from your cursor |
 | Click | Firework burst | Click or tap anywhere to set off a burst |
 
 There are also 5 presets and a **Randomize** button.

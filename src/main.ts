@@ -68,6 +68,20 @@ app.onChange((kind) => {
   urlTimer = window.setTimeout(() => history.replaceState(null, '', shareHash()), 250);
 });
 
+// The title greets people, then fades so it stays out of the way. It comes
+// back while the repel field is on, since that effect plays with its letters.
+const hero = document.querySelector<HTMLElement>('.hero')!;
+const TITLE_SECONDS = 3;
+let introOver = false;
+const syncTitle = () => hero.classList.toggle('is-faded', introOver && !app.state.get('repel')?.on);
+window.setTimeout(() => {
+  introOver = true;
+  syncTitle();
+}, TITLE_SECONDS * 1000);
+app.onChange((kind) => {
+  if (kind === 'structure') syncTitle();
+});
+
 // A share link pasted into this same tab only changes the hash.
 addEventListener('hashchange', () => {
   const setup = decodeSetup(location.hash, EFFECTS);
