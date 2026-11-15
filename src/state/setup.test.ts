@@ -7,9 +7,9 @@ import { cleanValue, decodeSetup, encodeSetup, fullValues } from './setup';
 const byId = (id: string) => EFFECTS.find((e) => e.id === id)!;
 
 describe('effect registry', () => {
-  it('has the 17 effects with unique ids', () => {
-    expect(EFFECTS).toHaveLength(17);
-    expect(new Set(EFFECTS.map((e) => e.id)).size).toBe(17);
+  it('has the 23 effects with unique ids', () => {
+    expect(EFFECTS).toHaveLength(23);
+    expect(new Set(EFFECTS.map((e) => e.id)).size).toBe(23);
   });
 
   it('names every effect file after its id (Copy code relies on this)', () => {
@@ -107,8 +107,8 @@ describe('share links', () => {
 });
 
 describe('presets and randomize', () => {
-  it('has 7 presets that only use real effects and survive a link round-trip', () => {
-    expect(PRESETS).toHaveLength(7);
+  it('has 10 presets that only use real effects and survive a link round-trip', () => {
+    expect(PRESETS).toHaveLength(10);
     for (const p of PRESETS) {
       for (const id of Object.keys(p.setup)) expect(byId(id), `${p.name}: ${id}`).toBeDefined();
       const full = Object.fromEntries(Object.entries(p.setup).map(([id, v]) => [id, fullValues(byId(id), v)]));
@@ -124,7 +124,7 @@ describe('presets and randomize', () => {
       expect(ids.length).toBeGreaterThanOrEqual(2);
       expect(ids.length).toBeLessThanOrEqual(4);
       const cats = ids.map((id) => byId(id).category);
-      for (const c of ['drawing', 'background', 'lighting']) expect(cats.filter((x) => x === c).length).toBeLessThanOrEqual(1);
+      for (const c of ['drawing', 'background', 'lighting', 'trippy']) expect(cats.filter((x) => x === c).length).toBeLessThanOrEqual(1);
       for (const id of ids) expect(setup[id]).toEqual(fullValues(byId(id), setup[id]));
     }
   });

@@ -66,6 +66,30 @@ export const PRESETS: Preset[] = [
       cursor: { shape: 'star', color: '#ffd166', size: 22 },
     },
   },
+  {
+    name: 'Mind melt',
+    setup: {
+      lava: { blobs: 8, size: 100, speed: 4 },
+      echo: { copies: 10, delay: 3, spin: 4 },
+      trip: { speed: 3, boost: 170 },
+    },
+  },
+  {
+    name: 'Kaleido dream',
+    setup: {
+      spiral: { arms: 6, twist: 4, speed: 2 },
+      kaleido: { slices: 8, size: 7, fade: 6 },
+      cursor: { shape: 'orb', color: '#ffffff', size: 18 },
+    },
+  },
+  {
+    name: 'Op art',
+    setup: {
+      moire: { color: '#ffffff', spacing: 8, opacity: 30 },
+      cursor: { shape: 'ring', color: '#ff7ad9', size: 22 },
+      shockwave: { color: '#ff7ad9', size: 260, speed: 5 },
+    },
+  },
 ];
 
 function randomColor(): string {
@@ -94,7 +118,7 @@ export function randomSetup(effects: Effect[]): Setup {
   const used = new Set<string>();
   for (const fx of pool) {
     if (Object.keys(setup).length >= want) break;
-    const limited = fx.category === 'drawing' || fx.category === 'background' || fx.category === 'lighting';
+    const limited = ['drawing', 'background', 'lighting', 'trippy'].includes(fx.category);
     if (limited && used.has(fx.category)) continue;
     used.add(fx.category);
     const values: Record<string, number | string> = {};
