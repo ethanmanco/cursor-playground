@@ -402,6 +402,14 @@ input {
 
 .cat-cursor { --cat: var(--pink); }
 .cat-followers { --cat: var(--cat-followers); }
+.cat-trippy { --cat: #ffb04a; }
+
+.cat-trippy > legend {
+  background: linear-gradient(90deg, #ff6b6b, #ffd166, #8affc1, #6ee7ff, #b28cff, #ff7ad9);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
 .cat-drawing { --cat: var(--cat-drawing); }
 .cat-background { --cat: var(--cat-background); }
 .cat-lighting { --cat: var(--cat-lighting); }
