@@ -846,8 +846,36 @@ body.touring .autopilot-pill {
 }
 
 .panel-foot {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 14px;
   margin-top: 14px;
-  text-align: center;
+}
+
+.star-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 209, 102, 0.45);
+  background: rgba(255, 209, 102, 0.08);
+  color: #ffe6a6;
+  font-size: 0.82rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.star-link:hover {
+  background: rgba(255, 209, 102, 0.18);
+  border-color: var(--gold);
+}
+
+.star-icon {
+  color: var(--gold);
 }
 
 .link-button {

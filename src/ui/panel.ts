@@ -467,7 +467,19 @@ export function buildPanel(opts: PanelOptions): Panel {
     for (const fx of list) group.append(effectCard(fx));
     body.append(group);
   }
-  body.append(el('div', { class: 'panel-foot' }, keysButton));
+  const star = el(
+    'a',
+    {
+      class: 'star-link',
+      href: 'https://github.com/ethanmanco/cursor-playground',
+      target: '_blank',
+      rel: 'noopener',
+    },
+    el('span', { class: 'star-icon', 'aria-hidden': 'true' }, '\u2605'),
+    'Star on GitHub',
+  );
+  star.setAttribute('aria-label', 'Star Cursor Playground on GitHub (opens in a new tab)');
+  body.append(el('div', { class: 'panel-foot' }, star, keysButton));
 
   function effectCard(fx: Effect): HTMLElement {
     const st = app.get(fx);
